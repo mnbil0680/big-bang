@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <title>عرض سعر احترافي</title>
+    <!-- Include jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Include html2canvas for rendering the HTML -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Include the Amiri font (adjust the path if needed) -->
+    <script src="Amiri-Regular.js"></script>
+  </head>
+  <body>
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <div class="watermark">نسخة للعميل</div>
+
+    <!-- أزرار التحكم بالطباعة والتحرير - لن تظهر عند الطباعة -->
+    <div class="toolbar-container no-print">
+      <div class="print-controls">
+        <button
+          class="print-btn"
+          title="طباعة عرض السعر"
+          onclick="window.print()"
+        >
+          <i class="fa fa-print"></i> طباعة
+        </button>
+        <button
+          class="export-btn"
+          title="تصدير إلى PDF"
+          onclick="exportToPDF()"
+        >
+          <i class="fa fa-file-pdf-o"></i> تصدير PDF
+        </button>
+        <button
+          class="edit-btn"
+          title="تحرير النموذج"
+          onclick="toggleEditMode()"
+        >
+          <i class="fa fa-edit"></i> تحرير
+        </button>
+        <button class="add-row-btn" title="إضافة صف جديد" onclick="addNewRow()">
+          <i class="fa fa-plus"></i> إضافة صف
+        </button>
+        <button
+          class="export-btn"
+          title="حفظ عرض السعر في قاعدة البيانات"
+          onclick="saveQuotationToDB()"
+        >
+          <i class="fa fa-save"></i> حفظ في قاعدة البيانات
+        </button>
+        <button
+          class="export-btn"
+          title="حفظ عرض السعر كـ JSON"
+          onclick="saveQuotationAsJSON()"
+        >
+          <i class="fa fa-download"></i> حفظ كـ JSON
+        </button>
+        <button
+          class="import-btn"
+          title="استيراد عرض سعر"
+          onclick="loadQuotation()"
+        >
+          <i class="fa fa-upload"></i> استيراد
+        </button>
+        <input
+          type="file"
+          id="import-quotation"
+          style="display: none"
+          accept=".json"
+          onchange="importQuotationFile(this)"
+        />
+        <button
+          class="reset-btn"
+          title="إنشاء عرض سعر جديد"
+          onclick="resetForm()"
+        >
+          <i class="fa fa-refresh"></i> عرض جديد
+        </button>
+      </div>
+
+      <div style="margin-top: 10px">
+        <label for="vat-rate">نسبة الضريبة %:</label>
+        <input
+          type="number"
+          id="vat-rate"
+          value="15"
+          min="0"
+          max="100"
+          style="width: 60px"
+          onchange="updateVatRate(this.value)"
+        />
+
+        <span style="margin: 0 20px"></span>
+
+        <label for="watermark-text">العلامة المائية:</label>
+        <input
+          type="text"
+          id="watermark-text"
+          value="نسخة للعميل"
+          style="width: 150px"
+          onchange="updateWatermark(this.value)"
+        />
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="header">
+        <div class="company-header">
+          <h2
+            style="color: #0056b3; margin-bottom: 15px"
+            contenteditable="true"
+          >
+            شركة المستقبل للتقنية
+          </h2>
+          <p contenteditable="true">
+            شارع الملك فهد، حي الورود، الرياض، المملكة العربية السعودية
+          </p>
+          <p contenteditable="true">هاتف: +966-11-XXX-XXXX</p>
+          <p contenteditable="true">البريد الإلكتروني: info@futuretech.com</p>
+          <p contenteditable="true">الرقم الضريبي: 123456789012345</p>
+        </div>
+        <div>
+          <div class="logo">
+            <span class="logo-text">انقر لرفع الشعار</span>
+            <img
+              id="company-logo"
+              src=""
+              style="display: none"
+              alt="شعار الشركة"
+            />
+            <input
+              type="file"
+              id="logo-upload"
+              class="logo-upload"
+              accept="image/*"
+              onchange="loadLogo(event)"
+            />
+          </div>
+        </div>
+      </div>
+
+      <h1
+        style="
+          color: #0056b3;
+          margin-top: 10mm;
+          margin-bottom: 5mm;
+          text-align: center;
+        "
+      >
+        عرض سعر
+      </h1>
+
+      <!-- معلومات العرض -->
+      <div class="clearfix">
+        <div class="quote-number">
+          رقم العرض:
+          <span id="quote-number" contenteditable="true">Q-2025-0012</span>
+        </div>
+        <div class="quote-date">
+          التاريخ:
+          <span id="quote-date" contenteditable="true">5 مارس 2025</span>
+        </div>
+      </div>
+
+      <!-- اختيار العملة -->
+      <div class="currency-selector no-print">
+        <label for="currency">العملة:</label>
+        <select id="currency" onchange="changeCurrency()">
+          <!-- Options will be populated dynamically -->
+        </select>
+      </div>
+
+      <div class="client-info">
+        <h3>معلومات العميل</h3>
+        <div style="display: flex; justify-content: space-between">
+          <div style="width: 48%">
+            <p>
+              <strong>اسم العميل / الشركة:</strong>
+              <span id="client-name" contenteditable="true"
+                >شركة النجاح للحلول التجارية</span
+              >
+            </p>
+            <p>
+              <strong>العنوان:</strong>
+              <span id="client-address" contenteditable="true"
+                >شارع التحلية، جدة</span
+              >
+            </p>
+            <p>
+              <strong>الرقم الضريبي:</strong>
+              <span id="client-taxNumber" contenteditable="true"
+                >310987654321098</span
+              >
+            </p>
+          </div>
+          <div style="width: 48%">
+            <p>
+              <strong>جهة الاتصال:</strong>
+              <span id="client-contact" contenteditable="true">محمد أحمد</span>
+            </p>
+            <p>
+              <strong>رقم الهاتف:</strong>
+              <span id="client-phone" contenteditable="true"
+                >+966-54-XXX-XXXX</span
+              >
+            </p>
+            <p>
+              <strong>البريد الإلكتروني:</strong>
+              <span id="client-email" contenteditable="true"
+                >contact@success.com</span
+              >
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <h3 style="color: #0056b3">تفاصيل الخدمات والمنتجات</h3>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 5%">رقم</th>
+            <th style="width: 15%">رمز المنتج</th>
+            <th style="width: 35%">الوصف</th>
+            <th style="width: 10%">الكمية</th>
+            <th style="width: 15%">سعر الوحدة</th>
+            <th style="width: 10%">الضريبة %</th>
+            <th style="width: 10%">الإجمالي</th>
+          </tr>
+        </thead>
+        <tbody id="products-table-body">
+          <!-- Template Row -->
+          <tr id="new-row-template" style="display: none">
+            <td class="row-number">
+              <button class="delete-row-btn no-print" onclick="deleteRow(this)">
+                حذف
+              </button>
+            </td>
+            <td contenteditable="true"></td>
+            <td contenteditable="true"><div class="item-details"></div></td>
+            <td><input type="number" class="qty-input" value="1" min="0" /></td>
+            <td><input type="text" class="price-input" value="0" /></td>
+            <td>
+              <input
+                type="number"
+                class="tax-input"
+                value="15"
+                min="0"
+                max="100"
+              />
+            </td>
+            <td class="row-total">0</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="total-section">
+        <table class="total-table">
+          <tr>
+            <td>المجموع قبل الضريبة:</td>
+            <td id="subtotal">0</td>
+          </tr>
+          <tr>
+            <td>خصم خاص:</td>
+            <td>
+              <input
+                type="text"
+                id="special-discount"
+                value="0"
+                oninput="updateTotals()"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>المجموع بعد الخصم:</td>
+            <td id="after-discount">0</td>
+          </tr>
+          <tr>
+            <td>
+              ضريبة القيمة المضافة (<span id="vat-percentage">15</span>%):
+            </td>
+            <td id="vat">0</td>
+          </tr>
+          <tr class="total-row">
+            <td>الإجمالي النهائي:</td>
+            <td id="final-total">0</td>
+          </tr>
+          <tr class="total-row">
+            <td>العملة:</td>
+            <td id="currency-display">ريال سعودي</td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="conditions">
+        <h3>الشروط والأحكام</h3>
+        <ol id="conditions-list"></ol>
+        <button class="add-row-btn no-print" onclick="addCondition()">
+          إضافة شرط جديد
+        </button>
+      </div>
+
+      <div class="signature">
+        <div
+          style="
+            margin-right: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            width: 100%;
+          "
+        >
+          <div style="width: 40%">
+            <p>مقدم العرض:</p>
+            <p>الاسم: <span contenteditable="true">عبدالله الأحمد</span></p>
+            <p>المنصب: <span contenteditable="true">مدير المبيعات</span></p>
+            <p>التوقيع: ________________________</p>
+            <p>التاريخ: <span contenteditable="true">٥ مارس ٢٠٢٥</span></p>
+          </div>
+          <div class="stamp" style="width: 60mm; height: 60mm">
+            <span class="stamp-text" style="font-size: 16px"
+              >انقر لرفع الختم</span
+            >
+            <img
+              id="company-stamp"
+              src=""
+              style="display: none"
+              alt="ختم الشركة"
+            />
+            <input
+              type="file"
+              id="stamp-upload"
+              class="stamp-upload"
+              accept="image/*"
+              onchange="loadStamp(event)"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="page-footer">
+        <div class="page-footer-title">شركاؤنا المعتمدون</div>
+        <div class="company-logos">
+          <div class="partner-logo">
+            <span class="partner-logo-text">شريك 1</span
+            ><img
+              id="partner-logo-1"
+              src=""
+              style="display: none"
+              alt="شعار شريك 1"
+            /><input
+              type="file"
+              id="partner-logo-upload-1"
+              class="partner-logo-upload"
+              accept="image/*"
+              onchange="loadPartnerLogo(event, 1)"
+            />
+          </div>
+          <div class="partner-logo">
+            <span class="partner-logo-text">شريك 2</span
+            ><img
+              id="partner-logo-2"
+              src=""
+              style="display: none"
+              alt="شعار شريك 2"
+            /><input
+              type="file"
+              id="partner-logo-upload-2"
+              class="partner-logo-upload"
+              accept="image/*"
+              onchange="loadPartnerLogo(event, 2)"
+            />
+          </div>
+          <div class="partner-logo">
+            <span class="partner-logo-text">شريك 3</span
+            ><img
+              id="partner-logo-3"
+              src=""
+              style="display: none"
+              alt="شعار شريك 3"
+            /><input
+              type="file"
+              id="partner-logo-upload-3"
+              class="partner-logo-upload"
+              accept="image/*"
+              onchange="loadPartnerLogo(event, 3)"
+            />
+          </div>
+          <div class="partner-logo">
+            <span class="partner-logo-text">شريك 4</span
+            ><img
+              id="partner-logo-4"
+              src=""
+              style="display: none"
+              alt="شعار شريك 4"
+            /><input
+              type="file"
+              id="partner-logo-upload-4"
+              class="partner-logo-upload"
+              accept="image/*"
+              onchange="loadPartnerLogo(event, 4)"
+            />
+          </div>
+          <div class="partner-logo">
+            <span class="partner-logo-text">شريك 5</span
+            ><img
+              id="partner-logo-5"
+              src=""
+              style="display: none"
+              alt="شعار شريك 5"
+            /><input
+              type="file"
+              id="partner-logo-upload-5"
+              class="partner-logo-upload"
+              accept="image/*"
+              onchange="loadPartnerLogo(event, 5)"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- إضافة Font Awesome للأيقونات -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+
+    <!-- Link to the external JavaScript file -->
+    <script src="script.js"></script>
+  </body>
+</html>

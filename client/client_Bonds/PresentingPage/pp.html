@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bonds System - Data Management</title>
+    <link rel="stylesheet" href="style.css" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <h1 class="sidebar-title">Bonds System</h1>
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-section="vouchers">
+                    <span class="material-icons">receipt</span> Vouchers
+                </button>
+                <button class="nav-item" data-section="settings">
+                    <span class="material-icons">settings</span> Settings
+                </button>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="content-header">
+                <h2 id="section-title">Vouchers</h2>
+                <div class="header-actions">
+                    <div class="search-box">
+                        <input type="text" id="searchInput" placeholder="Search..." />
+                        <span class="material-icons">search</span>
+                    </div>
+                    <button id="addNewBtn" class="action-btn primary-btn">
+                        <span class="material-icons">add</span> New Voucher
+                    </button>
+                    <button id="refreshBtn" class="action-btn">
+                        <span class="material-icons">refresh</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table id="dataTable">
+                    <thead>
+                        <tr>
+                            <th>Voucher Number</th>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Entity</th>
+                            <th>Amount</th>
+                            <th>Description</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+                <div class="pagination" id="pagination"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Edit Voucher</h2>
+            <form id="editForm">
+                <div class="form-group">
+                    <label>Voucher Number:</label>
+                    <input type="text" id="editVoucherNumber" readonly />
+                </div>
+                <div class="form-group">
+                    <label>Date:</label>
+                    <input type="date" id="editDate" required />
+                </div>
+                <div class="form-group">
+                    <label>Entity:</label>
+                    <input type="text" id="editEntity" required />
+                </div>
+                <div class="form-group">
+                    <label>Amount:</label>
+                    <input type="number" id="editAmount" required />
+                </div>
+                <div class="form-group">
+                    <label>Description:</label>
+                    <textarea id="editDescription" required></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-save">Save Changes</button>
+                    <button type="button" class="btn-cancel">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add New Voucher Modal -->
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <span class="close" data-modal="addModal">&times;</span>
+            <h2>Add New Voucher</h2>
+            <form id="addForm">
+                <div class="form-group">
+                    <label>Type:</label>
+                    <select id="newType" required>
+                        <option value="receipt">Receipt</option>
+                        <option value="payment">Payment</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Voucher Number:</label>
+                    <input type="text" id="newVoucherNumber" required />
+                </div>
+                <div class="form-group">
+                    <label>Date:</label>
+                    <input type="date" id="newDate" required />
+                </div>
+                <div class="form-group">
+                    <label>Entity:</label>
+                    <input type="text" id="newEntity" required />
+                </div>
+                <div class="form-group">
+                    <label>Amount:</label>
+                    <input type="number" id="newAmount" required />
+                </div>
+                <div class="form-group">
+                    <label>Amount in Words:</label>
+                    <input type="text" id="newAmountInWords" required />
+                </div>
+                <div class="form-group">
+                    <label>Description:</label>
+                    <textarea id="newDescription" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Payment Method:</label>
+                    <select id="newPaymentMethod" required>
+                        <option value="cash">Cash</option>
+                        <option value="check">Check</option>
+                        <option value="transfer">Bank Transfer</option>
+                    </select>
+                </div>
+                <div id="checkFields" class="conditional-fields" style="display: none;">
+                    <div class="form-group">
+                        <label>Check Number:</label>
+                        <input type="text" id="newCheckNumber" />
+                    </div>
+                    <div class="form-group">
+                        <label>Check Date:</label>
+                        <input type="date" id="newCheckDate" />
+                    </div>
+                    <div class="form-group">
+                        <label>Bank:</label>
+                        <input type="text" id="newBank" />
+                    </div>
+                </div>
+                <div id="transferFields" class="conditional-fields" style="display: none;">
+                    <div class="form-group">
+                        <label>Transfer Number:</label>
+                        <input type="text" id="newTransferNumber" />
+                    </div>
+                    <div class="form-group">
+                        <label>Bank:</label>
+                        <input type="text" id="newTransferBank" />
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-save">Add Voucher</button>
+                    <button type="button" class="btn-cancel" data-modal="addModal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="pp.js"></script>
+</body>
+</html>

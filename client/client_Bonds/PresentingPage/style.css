@@ -1,0 +1,444 @@
+/* General Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Segoe UI", sans-serif;
+  background-color: #f4f6f9;
+  color: #333;
+}
+
+/* Layout */
+.app-container {
+  display: flex;
+  height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 260px;
+  background: linear-gradient(135deg, #1e3c72, #2a5298);
+  color: white;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-title {
+  font-size: 1.6rem;
+  text-align: center;
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  color: white;
+  background: transparent;
+  border: none;
+  transition: background 0.3s;
+}
+
+.nav-item .material-icons {
+  margin-right: 10px;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.nav-item.active {
+  background: #ff6b6b;
+}
+
+/* Main Content */
+.main-content {
+  flex-grow: 1;
+  padding: 25px;
+}
+
+#section-title {
+  font-size: 2rem;
+  color: #2a5298;
+}
+
+/* Data Section */
+.table-container {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.collection-section {
+  display: none;
+}
+
+.collection-section.active {
+  display: block;
+}
+
+/* Data Cards */
+.table-data {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  padding-top: 15px;
+}
+
+.data-item {
+  background: #ffffff;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s, box-shadow 0.2s;
+  font-size: 0.95rem;
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  word-wrap: break-word; /* Ensures words wrap */
+  min-height: 120px; /* Prevent excessive height */
+}
+
+.data-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.12);
+  background: #f0f5ff;
+}
+
+/* Ensure text spacing inside cards */
+.data-item strong {
+  color: #1e3c72;
+  display: block;
+  margin-bottom: 4px;
+  font-size: 1rem;
+}
+
+.data-item span {
+  font-size: 0.9rem;
+  color: #555;
+  display: block;
+  margin-top: 3px;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.page-btn {
+  padding: 8px 14px;
+  background: #2a5298;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  margin: 0 4px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.page-btn:hover {
+  background: #1e3c72;
+}
+
+.page-btn.active {
+  background: #ff6b6b;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 80px;
+  }
+
+  .sidebar-title {
+    display: none;
+  }
+
+  .nav-item span:not(.material-icons) {
+    display: none;
+  }
+
+  .nav-item {
+    justify-content: center;
+  }
+
+  .main-content {
+    padding: 15px;
+  }
+
+  .table-data {
+    grid-template-columns: 1fr;
+  }
+}
+/* Modal Styles */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  width: 50%;
+  max-width: 500px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.close {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.modal-content p {
+  font-size: 1rem;
+  margin: 10px 0;
+}
+
+/* Fade-in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Add these new styles to your existing CSS */
+
+.content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.header-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.search-box {
+    position: relative;
+    width: 300px;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 8px 35px 8px 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.search-box .material-icons {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #2a5298;
+}
+
+tr:hover {
+    background-color: #f5f5f5;
+}
+
+.actions {
+    display: flex;
+    gap: 8px;
+}
+
+.action-btn {
+    background: none;
+    border: none;
+    padding: 5px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.action-btn:hover {
+    background-color: #e9ecef;
+}
+
+.action-btn.edit {
+    color: #2a5298;
+}
+
+.action-btn.delete {
+    color: #dc3545;
+}
+
+/* Modal Form Styles */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.form-group textarea {
+    height: 100px;
+    resize: vertical;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.btn-save,
+.btn-cancel {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+/* Fix for the CSS syntax error */
+.btn-save {
+    background-color: #2a5298;
+    color: white;
+}
+
+/* Primary button styles that were incorrectly nested */
+.primary-btn {
+    background-color: #2a5298;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 15px;
+    border-radius: 4px;
+}
+
+.primary-btn:hover {
+    background-color: #1e3c72;
+}
+
+.primary-btn .material-icons {
+    font-size: 18px;
+}
+
+.conditional-fields {
+    border-left: 3px solid #2a5298;
+    padding-left: 15px;
+    margin: 10px 0;
+}
+
+select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    background-color: white;
+}
+
+/* Make modals more responsive */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 90%;
+        max-width: none;
+    }
+}
+
+.btn-cancel {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-save:hover {
+    background-color: #1e3c72;
+}
+
+.btn-cancel:hover {
+    background-color: #5a6268;
+}
+
+/* Settings styles */
+.settings-container {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+}
+
+.settings-card {
+    padding: 20px;
+}
+
+.settings-card h3 {
+    color: #2a5298;
+    margin-bottom: 15px;
+    margin-top: 25px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.settings-card h3:first-child {
+    margin-top: 0;
+}

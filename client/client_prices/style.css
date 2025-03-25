@@ -1,0 +1,571 @@
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  padding: 20px;
+  direction: rtl;
+  background-color: #f9f9f9;
+  color: #333;
+  box-sizing: border-box;
+}
+.container {
+  width: 210mm; /* عرض A4 */
+  min-height: 297mm; /* طول A4 */
+  max-width: 210mm;
+  margin: 0 auto;
+  background-color: white;
+  box-shadow: 0 0 20px #0000001a;
+  padding: 20mm;
+  box-sizing: border-box;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  overflow: hidden;
+  table-layout: fixed; /* ضبط عرض الجدول */
+  border: 1px solid #e0e0e0;
+}
+.delete-row-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  padding: 2px 5px;
+  font-size: 10px;
+  margin-right: 5px;
+  opacity: 0.8;
+}
+.delete-row-btn:hover {
+  opacity: 1;
+}
+th,
+td {
+  border: 1px solid #e0e0e0;
+  padding: 8px;
+  font-size: 11pt;
+  word-wrap: break-word; /* السماح بالتفاف النص */
+}
+th {
+  background-color: #0056b3;
+  color: white;
+  text-align: right;
+  font-weight: 600;
+}
+tr:nth-child(even) {
+  background-color: #f5f5f5;
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20mm; /* هوامش متوافقة مع A4 */
+  border-bottom: 2px solid #0056b3;
+  padding-bottom: 10mm;
+}
+.logo {
+  width: 40mm; /* مقاس متوافق مع A4 */
+  height: 30mm; /* مقاس متوافق مع A4 */
+  background-color: #f9f9f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+.logo img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.logo-text {
+  text-align: center;
+  font-size: 14px;
+  color: #777;
+}
+.logo-upload {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 10;
+}
+.total-section {
+  text-align: left;
+  margin-top: 10mm;
+}
+.total-table {
+  width: 50%;
+  margin-left: 0;
+  margin-right: auto;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.total-table td {
+  padding: 8px 15px;
+}
+.total-row {
+  font-weight: bold;
+  background-color: #f0f7ff !important;
+  color: #0056b3;
+  font-size: 16px;
+}
+.conditions {
+  margin-top: 30px;
+  background-color: #f9f9f9;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+}
+.conditions h3 {
+  color: #0056b3;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+.signature {
+  margin-top: 50px;
+}
+.item-details {
+  color: #666;
+  font-size: 0.9em;
+}
+.watermark {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-45deg);
+  font-size: 6em;
+  color: rgba(200, 200, 200, 0.2);
+  pointer-events: none;
+  z-index: -1;
+}
+/* تنسيق حقول الإدخال */
+input {
+  width: 90%;
+  padding: 5px;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  text-align: center;
+}
+input:focus {
+  outline: none;
+  border-color: #0056b3;
+  box-shadow: 0 0 3px rgba(0, 86, 179, 0.3);
+}
+.qty-input,
+.discount-input {
+  width: 50px;
+}
+.price-input {
+  width: 80px;
+}
+.print-controls {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 30px;
+  margin-bottom: 20px;
+}
+.print-btn,
+.export-btn,
+.edit-btn,
+.add-row-btn,
+.reset-btn,
+.import-btn {
+  padding: 10px 20px;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s;
+  margin: 5px;
+}
+.print-btn {
+  background-color: #0056b3;
+}
+.export-btn {
+  background-color: #28a745;
+}
+.edit-btn {
+  background-color: #f0ad4e;
+}
+.add-row-btn {
+  background-color: #28a745;
+}
+.reset-btn {
+  background-color: #dc3545;
+}
+.import-btn {
+  background-color: #6c757d;
+}
+
+/* تنسيق شريط الأدوات العلوي */
+.toolbar-container {
+  position: sticky;
+  top: 0;
+  background-color: #f9f9f9;
+  padding: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  z-index: 50;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+.stamp {
+  border: 2px dashed #0056b3;
+  width: 60mm; /* زيادة الحجم بنسبة 20% */
+  height: 60mm; /* زيادة الحجم بنسبة 20% */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 0; /* مربع */
+  color: #0056b3;
+  font-weight: bold;
+  position: relative;
+  overflow: hidden;
+}
+.stamp img {
+  max-width: 95%;
+  max-height: 95%;
+  object-fit: contain;
+  border-radius: 0;
+}
+.stamp-text {
+  font-size: 16px;
+}
+.stamp-upload {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 10;
+}
+.company-logos {
+  display: flex;
+  flex-direction: row; /* ترتيب أفقي */
+  justify-content: center;
+  flex-wrap: wrap; /* للتكيف مع المساحة المتاحة */
+  gap: 10px; /* مسافة بين الشعارات */
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+.partner-logo {
+  width: 60px; /* حجم 60×60 بكسل */
+  height: 60px; /* حجم 60×60 بكسل */
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f9f9f9;
+  position: relative;
+  overflow: hidden;
+}
+.partner-logo img {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+}
+.partner-logo-text {
+  font-size: 12px;
+  color: #777;
+  text-align: center;
+}
+.partner-logo-upload {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 10;
+}
+.page-footer {
+  margin-top: 30px;
+  border-top: 1px solid #ddd;
+  padding-top: 15px;
+}
+.page-footer-title {
+  text-align: center;
+  margin-bottom: 10px;
+  color: #555;
+  font-size: 14px;
+}
+.no-print {
+  display: block;
+}
+.print-only {
+  display: none;
+}
+
+/* إعدادات العملة ورقم العرض */
+.currency-selector {
+  margin-bottom: 20px;
+}
+.quote-number {
+  float: left;
+  font-weight: bold;
+  color: #0056b3;
+  margin-bottom: 10px;
+}
+.quote-date {
+  float: right;
+  margin-bottom: 10px;
+}
+.clearfix::after {
+  content: "";
+  clear: both;
+  display: table;
+}
+
+/* التوافق مع A4 للطباعة */
+@media print {
+  body {
+    background-color: white;
+    margin: 0;
+    padding: 0;
+    width: 210mm;
+    height: 297mm;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .container {
+    box-shadow: none;
+    padding: 15mm 15mm;
+    max-width: 180mm; /* عرض A4 ناقص الهوامش */
+    min-height: 267mm; /* طول A4 ناقص الهوامش */
+    margin: 0 auto;
+    border-radius: 0;
+  }
+  .watermark {
+    display: none; /* إخفاء العلامة المائية عند الطباعة */
+  }
+  .page-break {
+    page-break-after: always;
+  }
+  table {
+    page-break-inside: avoid; /* منع انقسام الجدول بين صفحات */
+    font-size: 10pt;
+    border: 1px solid #000;
+    width: 100%;
+  }
+  th,
+  td {
+    padding: 6px;
+    font-size: 10pt;
+    border: 1px solid #000 !important;
+    background-color: transparent !important; /* منع اختفاء خلفية الخلايا */
+  }
+  th {
+    background-color: #e6e6e6 !important; /* لون رمادي فاتح للطباعة */
+    color: #000 !important; /* لون الخط أسود للطباعة */
+    font-weight: bold;
+  }
+  tr:nth-child(even) {
+    background-color: #f8f8f8 !important;
+  }
+  .item-details {
+    font-size: 8pt;
+  }
+  /* تحويل حقول الإدخال إلى نص عادي عند الطباعة */
+  input {
+    border: none !important;
+    background: transparent !important;
+    font-size: 10pt;
+    color: #000 !important;
+    -webkit-print-color-adjust: exact;
+    color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  /* ضبط جدول المجاميع */
+  .total-table {
+    border: 1px solid #000;
+    margin-top: 10mm;
+  }
+  .total-table td {
+    padding: 5px 10px;
+    border: 1px solid #000 !important;
+  }
+  .total-row {
+    background-color: #e6e6e6 !important; /* لون رمادي فاتح للطباعة */
+    font-weight: bold;
+  }
+  h1 {
+    font-size: 16pt;
+    margin-top: 5mm;
+    margin-bottom: 5mm;
+  }
+  h2 {
+    font-size: 14pt;
+    margin-top: 4mm;
+    margin-bottom: 4mm;
+  }
+  h3 {
+    font-size: 12pt;
+    margin-top: 3mm;
+    margin-bottom: 3mm;
+  }
+  p,
+  li {
+    font-size: 10pt;
+    margin-top: 1mm;
+    margin-bottom: 1mm;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  /* تذييل الصفحة وشعارات الشركاء */
+  .page-footer {
+    margin-top: 20mm;
+    border-top: 1px solid #999;
+    padding-top: 5mm;
+    text-align: center;
+  }
+  .page-footer-title {
+    margin-bottom: 3mm;
+    font-size: 10pt;
+    color: #333;
+    font-weight: bold;
+  }
+  .company-logos {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 0 auto;
+    max-width: 180mm;
+    gap: 7mm;
+  }
+  .partner-logo {
+    border: none;
+    background-color: transparent;
+    width: 15mm;
+    height: 15mm;
+    display: inline-block;
+    margin: 0;
+  }
+  .partner-logo img {
+    width: 15mm;
+    height: 15mm;
+    object-fit: contain;
+    filter: grayscale(0%); /* للحصول على ألوان واضحة */
+  }
+  .partner-logo-text {
+    display: none;
+  }
+  .partner-logo-upload {
+    display: none;
+  }
+  .stamp {
+    border: none; /* إزالة الإطار المتقطع عند الطباعة */
+  }
+  /* إعدادات الصفحة للطباعة */
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+}
+/* Toast Notification Styles */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  width: 90%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #ff4d4f; /* Red background for errors */
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-family: "Arial", sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  transform: translateY(-20px);
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast-error {
+  background-color: #ff4d4f;
+  border-left: 4px solid #d9363e;
+}
+
+.toast span {
+  flex: 1;
+  text-align: right;
+}
+
+.toast-close {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  margin-left: 10px;
+  transition: color 0.2s ease;
+}
+
+.toast-close:hover {
+  color: #ddd;
+}
+
+/* Ensure the toast doesn't print */
+@media print {
+  .toast-container {
+    display: none;
+  }
+}
+.toast-success {
+  background-color: #4caf50;
+  color: white;
+  border-radius: 5px;
+  padding: 10px 20px;
+  margin: 10px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.toast-success.show {
+  opacity: 1;
+}
+
+.toast-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  margin-left: 10px;
+}
