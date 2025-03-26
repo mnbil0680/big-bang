@@ -362,3 +362,4 @@ app.delete('/technicians/:id', async (req, res) => {
         });
     }
 });
+

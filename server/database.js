@@ -7,7 +7,7 @@ const Settings = require('./schema/Bonds/settings');
 // Fix
 const Customer = require('./schema/Fix/customerSchema');
 const Inventory = require('./schema/Fix/inventorySchema');
-// const Order = require('./models/orderSchema');
+const Order = require('./schema/Fix/orderSchema');
 // const Technician = require('./models/technicianSchema');
 
 // // Price
@@ -415,6 +415,202 @@ deleteInventoryItem(id) {
             });
     });
 }
+
+createOrder(orderData) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            // Basic validation
+            if (!orderData || !orderData.items || !Array.isArray(orderData.items)) {
+                return reject('Valid order data with items array is required');
+            }
+
+            // Validate required fields
+            if (!orderData.orderId || !orderData.customerId || !orderData.type) {
+                return reject('orderId, customerId, and type are required fields');
+            }
+
+            // Validate items array is not empty
+            if (orderData.items.length === 0) {
+                return reject('Order must contain at least one item');
+            }
+
+            // Validate items structure
+            for (const item of orderData.items) {
+                if (!item.itemId || !item.quantity || !item.price) {
+                    return reject('Each item must have itemId, quantity, and price');
+                }
+                if (item.quantity <= 0 || item.price < 0) {
+                    return reject('Item quantity must be positive and price must be non-negative');
+                }
+            }
+
+            // Add timestamps
+            orderData.createdDate = new Date();
+            orderData.updatedDate = new Date();
+
+            // Validate customer exists
+            const customer = await Customer.findById(orderData.customerId);
+            if (!customer) {
+                return reject(`Customer ${orderData.customerId} not found`);
+            }
+
+            // Validate and check inventory
+            for (const item of orderData.items) {
+                const inventory = await Inventory.findById(item.itemId);
+                if (!inventory) {
+                    return reject(`Inventory item ${item.itemId} not found`);
+                }
+                if (inventory.quantity < item.quantity) {
+                    return reject(`Insufficient quantity for item ${item.itemId}. Available: ${inventory.quantity}, Requested: ${item.quantity}`);
+                }
+            }
+
+            // Create and save the order
+            const newOrder = new Order(orderData);
+            const savedOrder = await newOrder.save();
+
+            // Update inventory quantities
+            for (const item of orderData.items) {
+                await Inventory.findByIdAndUpdate(
+                    item.itemId,
+                    { $inc: { quantity: -item.quantity } }
+                );
+            }
+
+            console.log("Order created successfully:", savedOrder);
+            resolve(savedOrder);
+
+        } catch (error) {
+            console.error("Error creating order:", error);
+            reject(error.message || 'Error creating order');
+        }
+    });
+}
+
+getOrders() {
+    return new Promise((resolve, reject) => {
+        Order.find()
+            .populate('customerId')
+            .populate('technician')
+            .populate('items.itemId')
+            .then(data => {
+                console.log(`Found ${data.length} orders`);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error('Error getting orders:', err);
+                reject(err);
+            });
+    });
+}
+
+getOrderById(id) {
+    return new Promise((resolve, reject) => {
+        if (!id) {
+            reject('Order ID is required');
+            return;
+        }
+
+        Order.findById(id)
+            .populate('customerId')
+            .populate('technician')
+            .populate('items.itemId')
+            .then(data => {
+                if (!data) {
+                    console.log(`Order not found: ${id}`);
+                    reject(`Order not found: ${id}`);
+                }
+                console.log("Order retrieved successfully:", data);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error('Error getting order:', err);
+                reject(err);
+            });
+    });
+}
+
+updateOrder(order) {
+    return new Promise((resolve, reject) => {
+        if (!order || !order._id) {
+            reject('Order ID is required');
+            return;
+        }
+
+        order["updatedDate"] = new Date();
+
+        // First find the original order
+        Order.findById(order._id)
+            .then(originalOrder => {
+                if (!originalOrder) {
+                    throw new Error(`Order not found: ${order._id}`);
+                }
+
+                // Process inventory updates for changed items
+                const inventoryPromises = order.items.map(newItem => {
+                    const oldItem = originalOrder.items.find(i => 
+                        i.itemId.toString() === newItem.itemId.toString()
+                    );
+                    const quantityDiff = oldItem ? 
+                        newItem.quantity - oldItem.quantity : 
+                        newItem.quantity;
+
+                    return Inventory.findById(newItem.itemId)
+                        .then(inventory => {
+                            if (!inventory) {
+                                throw new Error(`Inventory item ${newItem.itemId} not found`);
+                            }
+                            inventory.quantity -= quantityDiff;
+                            if (inventory.quantity < 0) {
+                                throw new Error(`Insufficient quantity for item ${newItem.itemId}`);
+                            }
+                            return inventory.save();
+                        });
+                });
+
+                return Promise.all(inventoryPromises)
+                    .then(() => {
+                        return Order.findByIdAndUpdate(
+                            order._id,
+                            order,
+                            { new: true }
+                        );
+                    });
+            })
+            .then(updatedOrder => {
+                console.log("Order updated successfully:", updatedOrder);
+                resolve(updatedOrder);
+            })
+            .catch(err => {
+                console.error('Error updating order:', err);
+                reject(err);
+            });
+    });
+}
+
+deleteOrder(id) {
+    return new Promise((resolve, reject) => {
+        if (!id) {
+            reject('Order ID is required');
+            return;
+        }
+
+        Order.findByIdAndDelete(id)
+            .then(deletedOrder => {
+                if (!deletedOrder) {
+                    throw new Error('Order not found');
+                }
+                console.log('Order deleted successfully:', deletedOrder);
+                resolve(deletedOrder);
+            })
+            .catch(err => {
+                console.error('Error deleting order:', err);
+                reject(err);
+            });
+    });
+}
+
+
   
 }
 
