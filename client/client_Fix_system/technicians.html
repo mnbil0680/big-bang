@@ -1,277 +1,654 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>نظام إدارة الصيانة والتركيب - إدارة الفنيين</title>
     <!-- Bootstrap RTL CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css"
+    />
     <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
+    />
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="assets/css/styles.css">
-</head>
-<body>
+    <style>
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: none;
+        z-index: 999;
+      }
+      .modal-container {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0.8);
+        z-index: 1000;
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+        display: none;
+        opacity: 0;
+      }
+
+      .login-header {
+        background-color: #0d6efd;
+        color: #fff;
+        padding: 1rem;
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+        text-align: center;
+      }
+      .login-body {
+        padding: 1rem;
+      }
+      .login-footer {
+        text-align: right;
+        padding: 0.5rem 1rem 1rem;
+      }
+    </style>
+    <link rel="stylesheet" href="assets/css/styles.css" />
+  </head>
+  <body>
+    <!-- Modal Overlay -->
+    <div class="modal-overlay"></div>
+    <!-- Login Modal -->
+    <div id="loginDialog" class="modal-container">
+      <div class="login-header">
+        <h4>تسجيل الدخول</h4>
+      </div>
+      <div class="login-body">
+        <form id="loginForm">
+          <div class="mb-3">
+            <label for="username" class="form-label">اسم المستخدم</label>
+            <input
+              type="text"
+              class="form-control"
+              id="username"
+              name="username"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label for="password" class="form-label">كلمة المرور</label>
+            <input
+              type="password"
+              class="form-control"
+              id="password"
+              name="password"
+              required
+            />
+          </div>
+        </form>
+      </div>
+      <div class="login-footer">
+        <button type="submit" form="loginForm" class="btn btn-success">
+          دخول
+        </button>
+        <button type="button" id="closeLoginBtn" class="btn btn-secondary">
+          إلغاء
+        </button>
+      </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div id="signupDialog" class="modal-container">
+      <div class="login-header">
+        <h4>إنشاء حساب</h4>
+      </div>
+      <div class="login-body">
+        <form id="signupForm">
+          <div class="mb-3">
+            <label for="signupUsername" class="form-label">اسم المستخدم</label>
+            <input
+              type="text"
+              class="form-control"
+              id="signupUsername"
+              name="username"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label for="signupEmail" class="form-label"
+              >البريد الإلكتروني</label
+            >
+            <input
+              type="email"
+              class="form-control"
+              id="signupEmail"
+              name="email"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label for="signupPassword" class="form-label">كلمة المرور</label>
+            <input
+              type="password"
+              class="form-control"
+              id="signupPassword"
+              name="password"
+              required
+            />
+          </div>
+        </form>
+      </div>
+      <div class="login-footer">
+        <button type="submit" form="signupForm" class="btn btn-success">
+          تسجيل
+        </button>
+        <button type="button" id="closeSignupBtn" class="btn btn-secondary">
+          إلغاء
+        </button>
+      </div>
+    </div>
     <!-- تقسيم الصفحة -->
     <div class="layout-container">
-        <!-- الشريط الجانبي -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <h1 class="sidebar-logo company-name">نظام إدارة الصيانة</h1>
-                <button class="btn btn-sm btn-icon toggle-sidebar d-md-none">
-                    <i class="bi bi-x"></i>
-                </button>
-            </div>
-            <div class="sidebar-content">
-                <ul class="sidebar-nav">
-                    <li class="sidebar-item">
-                        <a href="index.html" class="sidebar-link">
-                            <i class="bi bi-speedometer2"></i>
-                            <span>لوحة التحكم</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="maintenance-requests.html" class="sidebar-link">
-                            <i class="bi bi-tools"></i>
-                            <span>طلبات الصيانة</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="installation-requests.html" class="sidebar-link">
-                            <i class="bi bi-building-gear"></i>
-                            <span>طلبات التركيب</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item active">
-                        <a href="technicians.html" class="sidebar-link">
-                            <i class="bi bi-person-gear"></i>
-                            <span>الفنيين</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="customers.html" class="sidebar-link">
-                            <i class="bi bi-people"></i>
-                            <span>العملاء</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="inventory.html" class="sidebar-link">
-                            <i class="bi bi-box-seam"></i>
-                            <span>المخزون</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="invoices.html" class="sidebar-link">
-                            <i class="bi bi-receipt"></i>
-                            <span>الفواتير</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="reports.html" class="sidebar-link">
-                            <i class="bi bi-bar-chart"></i>
-                            <span>التقارير</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </aside>
-
-        <!-- المحتوى الرئيسي -->
-        <div class="main-content">
-            <!-- شريط التنقل العلوي -->
-            <nav class="navbar navbar-expand navbar-light bg-white">
-                <div class="container-fluid">
-                    <button class="btn btn-icon toggle-sidebar d-md-none me-2">
-                        <i class="bi bi-list"></i>
-                    </button>
-                    
-                    <div class="d-none d-sm-block fw-bold company-name">
-                        نظام إدارة الصيانة والتركيب
-                    </div>
-                    
-                    <div class="ms-auto d-flex">
-                        <!-- قائمة الإشعارات -->
-                        <div class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="notificationsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-bell"></i>
-                                <span class="badge bg-danger notification-badge">5</span>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end notifications-dropdown" aria-labelledby="notificationsDropdown">
-                                <li><h6 class="dropdown-header">الإشعارات</h6></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <div class="notifications-list">
-                                    <!-- سيتم ملء هذا القسم بواسطة JavaScript -->
-                                </div>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item text-center" href="#">عرض كل الإشعارات</a></li>
-                            </ul>
-                        </div>
-                        
-                        <!-- قائمة المستخدم -->
-                        <div class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <span class="d-none d-lg-inline me-2 current-user-name">مدير النظام</span>
-                                <div class="avatar">
-                                    <span class="avatar-text">م</span>
-                                </div>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                                <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i> الملف الشخصي</a></li>
-                                <li><a class="dropdown-item" href="#"><i class="bi bi-gear me-2"></i> الإعدادات</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="#"><i class="bi bi-box-arrow-right me-2"></i> تسجيل الخروج</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </nav>
-            
-            <!-- الجزء الرئيسي من الصفحة -->
-            <main class="content">
-                <div class="container-fluid p-3">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h1 class="h3">إدارة الفنيين</h1>
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTechnicianModal">
-                            <i class="bi bi-person-plus"></i>
-                            <span>إضافة فني جديد</span>
-                        </button>
-                    </div>
-                    
-                    <!-- بطاقة الفنيين -->
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <h5 class="card-title mb-0">قائمة الفنيين</h5>
-                                <div class="input-group" style="width: 300px;">
-                                    <input type="text" class="form-control" placeholder="بحث..." aria-label="بحث">
-                                    <button class="btn btn-outline-secondary" type="button">
-                                        <i class="bi bi-search"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-striped" id="techniciansTable">
-                                    <thead>
-                                        <tr>
-                                            <th>رقم الفني</th>
-                                            <th>الاسم</th>
-                                            <th>التخصص</th>
-                                            <th>رقم الهاتف</th>
-                                            <th>الحالة</th>
-                                            <th>الإجراءات</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <!-- سيتم ملء هذا القسم بواسطة JavaScript -->
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        <div class="card-footer d-flex justify-content-between align-items-center">
-                            <div>
-                                <span>عرض 1-5 من 5 فني</span>
-                            </div>
-                            <nav aria-label="Page navigation">
-                                <ul class="pagination mb-0">
-                                    <li class="page-item disabled">
-                                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
-                                            <i class="bi bi-chevron-right"></i>
-                                        </a>
-                                    </li>
-                                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                                    <li class="page-item"><a class="page-link" href="#">2</a></li>
-                                    <li class="page-item"><a class="page-link" href="#">3</a></li>
-                                    <li class="page-item">
-                                        <a class="page-link" href="#">
-                                            <i class="bi bi-chevron-left"></i>
-                                        </a>
-                                    </li>
-                                </ul>
-                            </nav>
-                        </div>
-                    </div>
-                </div>
-            </main>
-            
-            <!-- تذييل الصفحة -->
-            <footer class="footer">
-                <div class="container-fluid">
-                    <div class="row text-muted">
-                        <div class="col-12 text-center">
-                            <p class="mb-0">
-                                &copy; <span id="currentYear">2023</span> - <span class="company-name">شركة الخبراء للصيانة والتركيبات</span> - جميع الحقوق محفوظة
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </footer>
+      <!-- الشريط الجانبي -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <h1 class="sidebar-logo company-name">نظام إدارة الصيانة</h1>
+          <button class="btn btn-sm btn-icon toggle-sidebar d-md-none">
+            <i class="bi bi-x"></i>
+          </button>
         </div>
+        <div class="sidebar-content">
+          <ul class="sidebar-nav">
+            <li class="sidebar-item">
+              <a href="index.html" class="sidebar-link">
+                <i class="bi bi-speedometer2"></i>
+                <span>لوحة التحكم</span>
+              </a>
+            </li>
+            <li class="sidebar-item">
+              <a href="maintenance-requests.html" class="sidebar-link">
+                <i class="bi bi-tools"></i>
+                <span>طلبات الصيانة</span>
+              </a>
+            </li>
+            <li class="sidebar-item">
+              <a href="installation-requests.html" class="sidebar-link">
+                <i class="bi bi-building-gear"></i>
+                <span>طلبات التركيب</span>
+              </a>
+            </li>
+            <li class="sidebar-item active">
+              <a href="technicians.html" class="sidebar-link">
+                <i class="bi bi-person-gear"></i>
+                <span>الفنيين</span>
+              </a>
+            </li>
+            <li class="sidebar-item">
+              <a href="customers.html" class="sidebar-link">
+                <i class="bi bi-people"></i>
+                <span>العملاء</span>
+              </a>
+            </li>
+            <li class="sidebar-item">
+              <a href="inventory.html" class="sidebar-link">
+                <i class="bi bi-box-seam"></i>
+                <span>المخزون</span>
+              </a>
+            </li>
+            <li class="sidebar-item">
+              <a href="invoices.html" class="sidebar-link">
+                <i class="bi bi-receipt"></i>
+                <span>الفواتير</span>
+              </a>
+            </li>
+            <li class="sidebar-item">
+              <a href="reports.html" class="sidebar-link">
+                <i class="bi bi-bar-chart"></i>
+                <span>التقارير</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </aside>
+
+      <!-- المحتوى الرئيسي -->
+      <div class="main-content">
+        <!-- Top Navigation Bar -->
+        <nav class="navbar navbar-expand navbar-light bg-white">
+          <div class="container-fluid">
+            <button class="btn btn-icon toggle-sidebar d-md-none me-2">
+              <i class="bi bi-list"></i>
+            </button>
+            <div class="d-none d-sm-block fw-bold company-name">
+              نظام إدارة الصيانة والتركيب
+            </div>
+            <div class="ms-auto d-flex align-items-center">
+              <!-- Logged in menu (initially hidden) -->
+              <div
+                id="userMenu"
+                class="d-flex align-items-center"
+                style="display: none"
+              >
+                <!-- Search Input -->
+                <div class="nav-item me-3">
+                  <input
+                    type="text"
+                    class="form-control"
+                    placeholder="بحث..."
+                    style="width: 200px"
+                  />
+                </div>
+                <!-- Notifications Dropdown -->
+                <div class="nav-item dropdown me-3">
+                  <a
+                    class="nav-link dropdown-toggle"
+                    href="#"
+                    id="notificationsDropdown"
+                    role="button"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                  >
+                    <i class="bi bi-bell"></i>
+                  </a>
+                  <ul
+                    class="dropdown-menu dropdown-menu-end notifications-dropdown"
+                    aria-labelledby="notificationsDropdown"
+                  >
+                    <li><h6 class="dropdown-header">الإشعارات</h6></li>
+                    <li><hr class="dropdown-divider" /></li>
+                    <div class="notifications-list">
+                      <!-- Notifications filled by JavaScript -->
+                    </div>
+                    <li><hr class="dropdown-divider" /></li>
+                    <li>
+                      <a class="dropdown-item text-center" href="#">
+                        عرض كل الإشعارات
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+                <!-- Profile Dropdown -->
+                <div class="nav-item dropdown">
+                  <a
+                    class="nav-link dropdown-toggle"
+                    href="#"
+                    id="profileDropdown"
+                    role="button"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                  >
+                    <i class="bi bi-person-circle"></i> حسابي
+                  </a>
+                  <ul
+                    class="dropdown-menu dropdown-menu-end"
+                    aria-labelledby="profileDropdown"
+                  >
+                    <li>
+                      <a class="dropdown-item" href="#"> الملف الشخصي </a>
+                    </li>
+                    <li>
+                      <a class="dropdown-item" href="#"> الإعدادات </a>
+                    </li>
+                    <li>
+                      <hr class="dropdown-divider" />
+                    </li>
+                    <li>
+                      <a class="dropdown-item" href="#" id="logoutBtn">
+                        تسجيل الخروج
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <!-- Authentication Buttons (shown when not logged in) -->
+              <div id="authButtons">
+                <button class="btn btn-primary me-2" id="loginBtn">
+                  <i class="bi bi-box-arrow-in-right"></i> تسجيل الدخول
+                </button>
+                <button class="btn btn-outline-primary" id="signupBtn">
+                  <i class="bi bi-person-plus"></i> إنشاء حساب
+                </button>
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        <!-- الجزء الرئيسي من الصفحة -->
+        <main class="content">
+          <div class="container-fluid p-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h1 class="h3">إدارة الفنيين</h1>
+              <button
+                type="button"
+                class="btn btn-primary"
+                data-bs-toggle="modal"
+                data-bs-target="#addTechnicianModal"
+              >
+                <i class="bi bi-person-plus"></i>
+                <span>إضافة فني جديد</span>
+              </button>
+            </div>
+
+            <!-- بطاقة الفنيين -->
+            <div class="card">
+              <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                  <h5 class="card-title mb-0">قائمة الفنيين</h5>
+                  <div class="input-group" style="width: 300px">
+                    <input
+                      type="text"
+                      class="form-control"
+                      placeholder="بحث..."
+                      aria-label="بحث"
+                    />
+                    <button class="btn btn-outline-secondary" type="button">
+                      <i class="bi bi-search"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive">
+                  <table class="table table-striped" id="techniciansTable">
+                    <thead>
+                      <tr>
+                        <th>رقم الفني</th>
+                        <th>الاسم</th>
+                        <th>التخصص</th>
+                        <th>رقم الهاتف</th>
+                        <th>الحالة</th>
+                        <th>الإجراءات</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <!-- سيتم ملء هذا القسم بواسطة JavaScript -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div
+                class="card-footer d-flex justify-content-between align-items-center"
+              >
+                <div>
+                  <span>عرض 1-5 من 5 فني</span>
+                </div>
+                <nav aria-label="Page navigation">
+                  <ul class="pagination mb-0">
+                    <li class="page-item disabled">
+                      <a
+                        class="page-link"
+                        href="#"
+                        tabindex="-1"
+                        aria-disabled="true"
+                      >
+                        <i class="bi bi-chevron-right"></i>
+                      </a>
+                    </li>
+                    <li class="page-item active">
+                      <a class="page-link" href="#">1</a>
+                    </li>
+                    <li class="page-item">
+                      <a class="page-link" href="#">2</a>
+                    </li>
+                    <li class="page-item">
+                      <a class="page-link" href="#">3</a>
+                    </li>
+                    <li class="page-item">
+                      <a class="page-link" href="#">
+                        <i class="bi bi-chevron-left"></i>
+                      </a>
+                    </li>
+                  </ul>
+                </nav>
+              </div>
+            </div>
+          </div>
+        </main>
+
+        <!-- تذييل الصفحة -->
+        <footer class="footer">
+          <div class="container-fluid">
+            <div class="row text-muted">
+              <div class="col-12 text-center">
+                <p class="mb-0">
+                  &copy; <span id="currentYear">2023</span> -
+                  <span class="company-name"
+                    >شركة الخبراء للصيانة والتركيبات</span
+                  >
+                  - جميع الحقوق محفوظة
+                </p>
+              </div>
+            </div>
+          </div>
+        </footer>
+      </div>
     </div>
 
     <!-- Modal إضافة فني جديد -->
-    <div class="modal fade" id="addTechnicianModal" tabindex="-1" aria-labelledby="addTechnicianModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addTechnicianModalLabel">إضافة فني جديد</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="addTechnicianForm" class="needs-validation" novalidate>
-                        <div class="mb-3">
-                            <label for="techId" class="form-label">رقم الفني</label>
-                            <input type="text" class="form-control" id="techId" required>
-                            <div class="invalid-feedback">
-                                يرجى إدخال رقم الفني
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="techName" class="form-label">اسم الفني</label>
-                            <input type="text" class="form-control" id="techName" required>
-                            <div class="invalid-feedback">
-                                يرجى إدخال اسم الفني
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="techSpecialization" class="form-label">التخصص</label>
-                            <select class="form-select" id="techSpecialization" required>
-                                <option value="">اختر التخصص</option>
-                                <option value="مكيفات">مكيفات</option>
-                                <option value="أجهزة منزلية">أجهزة منزلية</option>
-                                <option value="سباكة">سباكة</option>
-                                <option value="كهرباء">كهرباء</option>
-                                <option value="أخرى">أخرى</option>
-                            </select>
-                            <div class="invalid-feedback">
-                                يرجى اختيار التخصص
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="techPhone" class="form-label">رقم الهاتف</label>
-                            <input type="tel" class="form-control" id="techPhone" placeholder="966xxxxxxxxx" required>
-                            <div class="invalid-feedback">
-                                يرجى إدخال رقم هاتف صحيح
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                    <button type="button" class="btn btn-primary" id="saveTechnicianBtn">حفظ</button>
-                </div>
-            </div>
+    <div
+      class="modal fade"
+      id="addTechnicianModal"
+      tabindex="-1"
+      aria-labelledby="addTechnicianModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="addTechnicianModalLabel">
+              إضافة فني جديد
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="إغلاق"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form id="addTechnicianForm" class="needs-validation" novalidate>
+              <div class="mb-3">
+                <label for="techId" class="form-label">رقم الفني</label>
+                <input type="text" class="form-control" id="techId" required />
+                <div class="invalid-feedback">يرجى إدخال رقم الفني</div>
+              </div>
+              <div class="mb-3">
+                <label for="techName" class="form-label">اسم الفني</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="techName"
+                  required
+                />
+                <div class="invalid-feedback">يرجى إدخال اسم الفني</div>
+              </div>
+              <div class="mb-3">
+                <label for="techSpecialization" class="form-label"
+                  >التخصص</label
+                >
+                <select class="form-select" id="techSpecialization" required>
+                  <option value="">اختر التخصص</option>
+                  <option value="مكيفات">مكيفات</option>
+                  <option value="أجهزة منزلية">أجهزة منزلية</option>
+                  <option value="سباكة">سباكة</option>
+                  <option value="كهرباء">كهرباء</option>
+                  <option value="أخرى">أخرى</option>
+                </select>
+                <div class="invalid-feedback">يرجى اختيار التخصص</div>
+              </div>
+              <div class="mb-3">
+                <label for="techPhone" class="form-label">رقم الهاتف</label>
+                <input
+                  type="tel"
+                  class="form-control"
+                  id="techPhone"
+                  placeholder="966xxxxxxxxx"
+                  required
+                />
+                <div class="invalid-feedback">يرجى إدخال رقم هاتف صحيح</div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              إلغاء
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              id="saveTechnicianBtn"
+            >
+              حفظ
+            </button>
+          </div>
         </div>
+      </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.1/gsap.min.js"></script>
     <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- تعيين السنة الحالية في تذييل الصفحة -->
+    <!-- ApexCharts.js -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.35.0/dist/apexcharts.min.js"></script>
+    <!-- Set Current Year -->
     <script>
-        document.getElementById('currentYear').textContent = new Date().getFullYear();
+      document.getElementById("currentYear").textContent =
+        new Date().getFullYear();
     </script>
     <!-- Custom JavaScript -->
     <script src="assets/js/main.js"></script>
-</body>
+    <!-- Login and Signup Dialog Script with API integration and GSAP Animation -->
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // Check if user is logged in by checking for a token
+        if (localStorage.getItem("jwt")) {
+          document.getElementById("userMenu").style.display = "flex";
+          document.getElementById("authButtons").style.display = "none";
+        } else {
+          document.getElementById("userMenu").style.display = "none";
+          document.getElementById("authButtons").style.display = "flex";
+        }
+
+        // Logout functionality: remove token and refresh UI
+        const logoutBtn = document.getElementById("logoutBtn");
+        if (logoutBtn) {
+          logoutBtn.addEventListener("click", () => {
+            localStorage.removeItem("jwt");
+            location.reload();
+          });
+        }
+      });
+    </script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        let activeModal = null; // store the id of the currently open modal
+
+        function showModal(id) {
+          const modal = document.getElementById(id);
+          activeModal = id;
+          modal.style.display = "block";
+          document.querySelector(".modal-overlay").style.display = "block";
+          gsap.fromTo(
+            modal,
+            { opacity: 0, scale: 0.8 },
+            { opacity: 1, scale: 1, duration: 0.3, ease: "power2.out" }
+          );
+        }
+        function closeModal(id) {
+          const modal = document.getElementById(id);
+          gsap.to(modal, {
+            opacity: 0,
+            scale: 0.8,
+            duration: 0.3,
+            ease: "power2.in",
+            onComplete: () => {
+              modal.style.display = "none";
+              document.querySelector(".modal-overlay").style.display = "none";
+              activeModal = null;
+            },
+          });
+        }
+
+        // When clicking the overlay, close the active modal if it exists.
+        document
+          .querySelector(".modal-overlay")
+          .addEventListener("click", (e) => {
+            if (activeModal) {
+              closeModal(activeModal);
+            }
+          });
+
+        document
+          .getElementById("loginBtn")
+          .addEventListener("click", () => showModal("loginDialog"));
+        document
+          .getElementById("closeLoginBtn")
+          .addEventListener("click", () => closeModal("loginDialog"));
+        document
+          .getElementById("signupBtn")
+          .addEventListener("click", () => showModal("signupDialog"));
+        document
+          .getElementById("closeSignupBtn")
+          .addEventListener("click", () => closeModal("signupDialog"));
+
+        // Login form submission
+        document
+          .getElementById("loginForm")
+          .addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            try {
+              const response = await fetch("/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password }),
+              });
+              if (!response.ok) throw new Error("Login failed");
+              const data = await response.json();
+              localStorage.setItem("jwt", data.token);
+              alert("تم تسجيل الدخول بنجاح");
+              closeModal("loginDialog");
+            } catch (error) {
+              console.error(error);
+              alert("فشل تسجيل الدخول، يرجى المحاولة مرة أخرى");
+            }
+          });
+
+        // Signup form submission
+        document
+          .getElementById("signupForm")
+          .addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const username = document.getElementById("signupUsername").value;
+            const email = document.getElementById("signupEmail").value;
+            const password = document.getElementById("signupPassword").value;
+
+            try {
+              const response = await fetch("/auth/signup", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, email, password }),
+              });
+              if (!response.ok) throw new Error("Signup failed");
+              const data = await response.json();
+              alert("تم إنشاء الحساب بنجاح، يرجى تسجيل الدخول");
+              closeModal("signupDialog");
+            } catch (error) {
+              console.error(error);
+              alert("فشل إنشاء الحساب، يرجى المحاولة مرة أخرى");
+            }
+          });
+      });
+    </script>
+  </body>
 </html>
