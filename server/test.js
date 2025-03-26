@@ -1,172 +1,4 @@
-const mongoose = require('mongoose');
-const Customer = require('./models/customerSchema');
-const Inventory = require('./models/inventorySchema');
-const Order = require('./models/orderSchema');
-const Technician = require('./models/technicianSchema');
-const NodeCache = require('node-cache');
-
 class Database {
-    constructor() {
-        this.isConnected = false;
-        this.cache = new NodeCache({ stdTTL: 300 }); // Cache with 5 minutes TTL
-        this.retryAttempts = 3;
-        this.retryDelay = 1000; // 1 second
-    }
-
-    async connect(uri = 'mongodb://localhost:27017/management_system', poolSize = 10) {
-        try {
-            await mongoose.connect(uri, {
-                useNewUrlParser: true,
-                useUnifiedTopology: true,
-                maxPoolSize: poolSize,
-                serverSelectionTimeoutMS: 5000,
-                socketTimeoutMS: 45000
-            });
-            
-            // Create indexes for better query performance
-            await Customer.createIndexes();
-            await Inventory.createIndexes();
-            await Order.createIndexes();
-            await Technician.createIndexes();
-            this.isConnected = true;
-            console.log('Connected to MongoDB successfully');
-        } catch (error) {
-            console.error('MongoDB connection error:', error);
-            throw error;
-        }
-    }
-
-    async addCustomer(customerData) {
-        try {
-            const customer = new Customer(customerData);
-            const savedCustomer = await customer.save();
-            return { success: true, data: savedCustomer };
-        } catch (error) {
-            return { success: false, error: error.message };
-        }
-    }
-
-    async getCustomers(filter = {}, useCache = true) {
-        try {
-            const cacheKey = `customers:${JSON.stringify(filter)}`;
-            
-            if (useCache) {
-                const cachedData = this.cache.get(cacheKey);
-                if (cachedData) return cachedData;
-            }
-            
-            const customers = await Customer.find(filter);            
-            if (useCache) this.cache.set(cacheKey, customers);
-            return customers;
-        } catch (error) {
-            console.error('Error getting customers:', error);
-            throw error;
-        }
-    }
-
-    async getCustomerById(id) {
-        try {
-            return await Customer.findById(id);
-        } catch (error) {
-            console.error('Error getting customer:', error);
-            throw error;
-        }
-    }
-
-    async updateCustomer(id, updateData) {
-        try {
-            return await Customer.findByIdAndUpdate(id, updateData, { new: true });
-        } catch (error) {
-            console.error('Error updating customer:', error);
-            throw error;
-        }
-    }
-
-    async deleteCustomer(id) {
-        try {
-            return await Customer.findByIdAndDelete(id);
-        } catch (error) {
-            console.error('Error deleting customer:', error);
-            throw error;
-        }
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    // Inventory CRUD Operations
-    async addInventoryItem(itemData) {
-        try {
-            // Check if item with same itemId already exists
-            if (itemData.itemId) {
-                const existingItem = await Inventory.findOne({ itemId: itemData.itemId });
-                if (existingItem) {
-                    return { 
-                        success: false, 
-                        error: `Item with ID ${itemData.itemId} already exists` 
-                    };
-                }
-            }
-
-            // Validate required fields
-            if (!itemData.name || !itemData.quantity) {
-                return { success: false, error: 'Name and quantity are required' };
-            }
-
-            // Create new inventory item
-            const inventoryItem = new Inventory(itemData);
-            const savedItem = await inventoryItem.save();
-            
-            // Clear related cache
-            this.cache.del('inventory:all');
-            
-            return { 
-                success: true, 
-                data: savedItem 
-            };
-        } catch (error) {
-            console.error('Error adding inventory item:', error);
-            return { 
-                success: false, 
-                error: error.message 
-            };
-        }
-    }
-
-    async getInventoryItems(filter = {}) {
-        try {
-            return await Inventory.find(filter);
-        } catch (error) {
-            console.error('Error getting inventory items:', error);
-            throw error;
-        }
-    }
-
-    async getInventoryItemById(id) {
-        try {
-            return await Inventory.findById(id);
-        } catch (error) {
-            console.error('Error getting inventory item:', error);
-            throw error;
-        }
-    }
-
-    async updateInventoryItem(id, updateData) {
-        try {
-            return await Inventory.findByIdAndUpdate(id, updateData, { new: true });
-        } catch (error) {
-            console.error('Error updating inventory item:', error);
-            throw error;
-        }
-    }
-
-    async deleteInventoryItem(id) {
-        try {
-            return await Inventory.findByIdAndDelete(id);
-        } catch (error) {
-            console.error('Error deleting inventory item:', error);
-            throw error;
-        }
-    }
-
     /////////////////////////////////////////////////////////////////////////////
     // Order CRUD Operations
     async createOrder(orderData) {
@@ -657,4 +489,415 @@ class Database {
     }
 }
 
-module.exports = Database;
+
+
+class Database {
+    constructor() {
+      this.Url = process.env.MONGO_URI || "mongodb://localhost:27017/Future"; // Use environment variable for MongoDB URL
+    }
+  
+    async connect() {
+      try {
+        await mongoose.connect(this.Url);
+        console.log("Database Connected Successfully");
+        // Seed currencies after successful connection
+        await this.seedCurrencies();
+      } catch (err) {
+        console.error("Error in Database Connection:", err);
+        throw err; // Re-throw to let the server handle the failure
+      }
+    }
+  
+    // Client Methods
+    async addClient(client) {
+      try {
+        const newClient = new Client(client);
+        const doc = await newClient.save();
+        return doc;
+      } catch (err) {
+        throw new Error(this.extractErrorMessage(err, "Failed to add client"));
+      }
+    }
+  
+    async getClients() {
+      try {
+        const data = await Client.find();
+        return data;
+      } catch (err) {
+        throw new Error(this.extractErrorMessage(err, "Failed to fetch clients"));
+      }
+    }
+  
+    async getClientByID(id) {
+      try {
+        const data = await Client.findById(id);
+        return data; // Returns null if not found
+      } catch (err) {
+        throw new Error(this.extractErrorMessage(err, "Failed to fetch client"));
+      }
+    }
+  
+    async updateClient(client) {
+      try {
+        client.updatedDate = new Date();
+        const data = await Client.findByIdAndUpdate(client._id, client, {
+          new: true,
+        });
+        return data; // Returns null if not found
+      } catch (err) {
+        throw new Error(this.extractErrorMessage(err, "Failed to update client"));
+      }
+    }
+  
+    async deleteClientById(id) {
+      try {
+        const data = await Client.findByIdAndDelete(id);
+        return data; // Returns null if not found
+      } catch (err) {
+        throw new Error(this.extractErrorMessage(err, "Failed to delete client"));
+      }
+    }
+  
+    async getClientsByEmail(email) {
+      try {
+        const query = { email: { $regex: new RegExp(email, "i") } };
+        const data = await Client.find(query);
+        return data; // Returns empty array if not found
+      } catch (err) {
+        throw new Error(
+          this.extractErrorMessage(err, "Failed to fetch clients by email")
+        );
+      }
+    }
+  
+    // Product Methods
+    async addProduct(product) {
+      try {
+        const newProduct = new Product(product);
+        const doc = await newProduct.save();
+        return doc;
+      } catch (err) {
+        throw new Error(this.extractErrorMessage(err, "Failed to add product"));
+      }
+    }
+  
+    async getProducts() {
+      try {
+        const data = await Product.find();
+        return data;
+      } catch (err) {
+        throw new Error(
+          this.extractErrorMessage(err, "Failed to fetch products")
+        );
+      }
+    }
+  
+    async getProductByID(id) {
+      try {
+        const data = await Product.findById(id);
+        return data; // Returns null if not found
+      } catch (err) {
+        throw new Error(this.extractErrorMessage(err, "Failed to fetch product"));
+      }
+    }
+  
+    async updateProduct(product) {
+      try {
+        product.updatedDate = new Date();
+        const data = await Product.findByIdAndUpdate(product._id, product, {
+          new: true,
+        });
+        return data; // Returns null if not found
+      } catch (err) {
+        throw new Error(
+          this.extractErrorMessage(err, "Failed to update product")
+        );
+      }
+    }
+  
+    async deleteProductById(id) {
+      try {
+        const data = await Product.findByIdAndDelete(id);
+        return data; // Returns null if not found
+      } catch (err) {
+        throw new Error(
+          this.extractErrorMessage(err, "Failed to delete product")
+        );
+      }
+    }
+  
+    // Currency Methods
+    async addCurrency(currency) {
+      try {
+        const newCurrency = new Currency(currency);
+        const doc = await newCurrency.save();
+        return doc;
+      } catch (err) {
+        throw new Error(this.extractErrorMessage(err, "Failed to add currency"));
+      }
+    }
+  
+    async getCurrencies() {
+      try {
+        const data = await Currency.find();
+        return data;
+      } catch (err) {
+        throw new Error(
+          this.extractErrorMessage(err, "Failed to fetch currencies")
+        );
+      }
+    }
+  
+    async getCurrencyByID(id) {
+      try {
+        const data = await Currency.findById(id);
+        return data; // Returns null if not found
+      } catch (err) {
+        throw new Error(
+          this.extractErrorMessage(err, "Failed to fetch currency")
+        );
+      }
+    }
+  
+    async updateCurrency(currency) {
+      try {
+        currency.updatedDate = new Date();
+        const data = await Currency.findByIdAndUpdate(currency._id, currency, {
+          new: true,
+        });
+        return data; // Returns null if not found
+      } catch (err) {
+        throw new Error(
+          this.extractErrorMessage(err, "Failed to update currency")
+        );
+      }
+    }
+  
+    async deleteCurrencyById(id) {
+      try {
+        const data = await Currency.findByIdAndDelete(id);
+        return data; // Returns null if not found
+      } catch (err) {
+        throw new Error(
+          this.extractErrorMessage(err, "Failed to delete currency")
+        );
+      }
+    }
+  
+    // Rule Methods
+    async addRule(rule) {
+      try {
+        const newRule = new Rule(rule);
+        const doc = await newRule.save();
+        return doc;
+      } catch (err) {
+        throw new Error(this.extractErrorMessage(err, "Failed to add rule"));
+      }
+    }
+  
+    async getRules() {
+      try {
+        const data = await Rule.find();
+        return data;
+      } catch (err) {
+        throw new Error(this.extractErrorMessage(err, "Failed to fetch rules"));
+      }
+    }
+  
+    async getRuleByID(id) {
+      try {
+        const data = await Rule.findById(id);
+        return data; // Returns null if not found
+      } catch (err) {
+        throw new Error(this.extractErrorMessage(err, "Failed to fetch rule"));
+      }
+    }
+  
+    async updateRule(rule) {
+      try {
+        rule.updatedDate = new Date();
+        const data = await Rule.findByIdAndUpdate(rule._id, rule, { new: true });
+        return data; // Returns null if not found
+      } catch (err) {
+        throw new Error(this.extractErrorMessage(err, "Failed to update rule"));
+      }
+    }
+  
+    async deleteRuleById(id) {
+      try {
+        const data = await Rule.findByIdAndDelete(id);
+        return data; // Returns null if not found
+      } catch (err) {
+        throw new Error(this.extractErrorMessage(err, "Failed to delete rule"));
+      }
+    }
+  
+    // Show Methods
+    async addShow(show) {
+      try {
+        const newShow = new Show(show);
+        const doc = await newShow.save();
+        return doc;
+      } catch (err) {
+        throw new Error(this.extractErrorMessage(err, "Failed to add show"));
+      }
+    }
+  
+    async getShows() {
+      try {
+        const data = await Show.find()
+          .populate("clientId")
+          .populate("products")
+          .populate("rules");
+        return data;
+      } catch (err) {
+        throw new Error(this.extractErrorMessage(err, "Failed to fetch shows"));
+      }
+    }
+  
+    async getShowByID(id) {
+      try {
+        const data = await Show.findById(id)
+          .populate("clientId")
+          .populate("products")
+          .populate("rules");
+        return data; // Returns null if not found
+      } catch (err) {
+        throw new Error(this.extractErrorMessage(err, "Failed to fetch show"));
+      }
+    }
+  
+    async updateShow(show) {
+      try {
+        show.updatedDate = new Date();
+        const data = await Show.findByIdAndUpdate(show._id, show, { new: true })
+          .populate("clientId")
+          .populate("products")
+          .populate("rules");
+        return data; // Returns null if not found
+      } catch (err) {
+        throw new Error(this.extractErrorMessage(err, "Failed to update show"));
+      }
+    }
+  
+    async deleteShowById(id) {
+      try {
+        const data = await Show.findByIdAndDelete(id);
+        return data; // Returns null if not found
+      } catch (err) {
+        throw new Error(this.extractErrorMessage(err, "Failed to delete show"));
+      }
+    }
+  
+    // Helper method to extract user-friendly error messages
+    extractErrorMessage(err, defaultMessage) {
+      if (err.name === "ValidationError") {
+        return Object.values(err.errors)
+          .map((e) => e.message)
+          .join("; ");
+      }
+      return err.message || defaultMessage;
+    }
+  
+    // Seed 10 popular currencies
+    async seedCurrencies() {
+      try {
+        const popularCurrencies = [
+          {
+            code: "USD",
+            name: "دولار أمريكي",
+            symbol: "$",
+            decimalPlaces: 2,
+            country: "الولايات المتحدة",
+          },
+          {
+            code: "EUR",
+            name: "يورو",
+            symbol: "€",
+            decimalPlaces: 2,
+            country: "المنطقة اليورو",
+          },
+          {
+            code: "SAR",
+            name: "ريال سعودي",
+            symbol: "ر.س",
+            decimalPlaces: 2,
+            country: "المملكة العربية السعودية",
+          },
+          {
+            code: "AED",
+            name: "درهم إماراتي",
+            symbol: "د.إ",
+            decimalPlaces: 2,
+            country: "الإمارات العربية المتحدة",
+          },
+          {
+            code: "GBP",
+            name: "جنيه إسترليني",
+            symbol: "£",
+            decimalPlaces: 2,
+            country: "المملكة المتحدة",
+          },
+          {
+            code: "JPY",
+            name: "ين ياباني",
+            symbol: "¥",
+            decimalPlaces: 0,
+            country: "اليابان",
+          },
+          {
+            code: "CAD",
+            name: "دولار كندي",
+            symbol: "CAD$",
+            decimalPlaces: 2,
+            country: "كندا",
+          },
+          {
+            code: "AUD",
+            name: "دولار أسترالي",
+            symbol: "A$",
+            decimalPlaces: 2,
+            country: "أستراليا",
+          },
+          {
+            code: "CHF",
+            name: "فرنك سويسري",
+            symbol: "Fr.",
+            decimalPlaces: 2,
+            country: "سويسرا",
+          },
+          {
+            code: "CNY",
+            name: "يوان صيني",
+            symbol: "¥",
+            decimalPlaces: 2,
+            country: "الصين",
+          },
+        ];
+  
+        // Check existing currencies by code
+        const existingCodes = (await Currency.find({}, "code")).map(
+          (c) => c.code
+        );
+  
+        // Filter out currencies that already exist
+        const currenciesToAdd = popularCurrencies.filter(
+          (c) => !existingCodes.includes(c.code)
+        );
+  
+        if (currenciesToAdd.length > 0) {
+          await Currency.insertMany(currenciesToAdd);
+          console.log(
+            `Seeded ${currenciesToAdd.length} new currencies: ${currenciesToAdd
+              .map((c) => c.code)
+              .join(", ")}`
+          );
+        } else {
+          console.log("All popular currencies are already seeded.");
+        }
+      } catch (err) {
+        console.error("Error seeding currencies:", err.message);
+        throw err; // Re-throw to let the server handle the failure
+      }
+    }
+  }

@@ -1,29 +1,3 @@
-// Add this at the very top of your file
-require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
-const bodyParser = require("body-parser");
-
-const app = express();
-const Database = require("./Database");
-const db = new Database();
-db.connect().catch((err) => {
-  console.error("Failed to connect to database:", err);
-  process.exit(1); // Exit if database connection fails
-});
-app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(express.static("public"));
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res
-    .status(500)
-    .send({ error: "Something went wrong!", message: err.message });
-});
-
 //////////////////////////////////////////////////////////////////
 // Client
 ////////////
@@ -414,7 +388,3 @@ app.delete("/shows/:id", async (req, res) => {
 
 //////////////////////////////////////////////////////////////////
 
-const port = 3000;
-app.listen(port, () => {
-  console.log(`Server has started on port ${port}...`);
-});
