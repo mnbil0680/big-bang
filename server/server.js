@@ -354,7 +354,75 @@ app.delete('/orders/:id', (req, res) => {
             res.status(500).send(err);
         });
 });
+////////////////////////////////////////////////////
+// ... existing code ...
 
+////////////////////////////////////////////////
+// Technician Routes
+app.post('/technicians', (req, res) => {
+    const body = req.body;
+    db.addTechnician(body)
+        .then(data => {
+            res.send(data);
+        })
+        .catch(err => {
+            res.status(500).send(err);
+        });
+});
+
+app.get('/technicians', (req, res) => {
+    db.getTechnicians()
+        .then(data => {
+            res.send(data);
+        })
+        .catch(err => {
+            res.status(500).send(err);
+        });
+});
+
+app.get('/technicians/:id', (req, res) => {
+    const { id } = req.params;
+    db.getTechnicianById(id)
+        .then(data => {
+            if(!data) {
+                res.status(404).send(`Technician not found: ${id}`);
+            }
+            res.send(data);
+        })
+        .catch(err => {
+            res.status(500).send(err);
+        });
+});
+
+app.put('/technicians/:id', (req, res) => {
+    const { id } = req.params;
+    db.updateTechnician(req.body)
+        .then(data => {
+            if(!data) {
+                res.status(404).send(`Technician not found: ${id}`);
+            }
+            res.send(data);
+        })
+        .catch(err => {
+            res.status(400).send(err);
+        });
+});
+
+app.delete('/technicians/:id', (req, res) => {
+    const { id } = req.params;
+    db.deleteTechnician(id)
+        .then(data => {
+            if(!data) {
+                res.status(404).send(`Technician not found: ${id}`);
+            }
+            res.send(data);
+        })
+        .catch(err => {
+            res.status(500).send(err);
+        });
+});
+
+// ... existing code (port and app.listen) ...
 
 
 

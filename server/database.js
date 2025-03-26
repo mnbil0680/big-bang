@@ -8,7 +8,7 @@ const Settings = require('./schema/Bonds/settings');
 const Customer = require('./schema/Fix/customerSchema');
 const Inventory = require('./schema/Fix/inventorySchema');
 const Order = require('./schema/Fix/orderSchema');
-// const Technician = require('./models/technicianSchema');
+const Technician = require('./schema/Fix/technicianSchema');
 
 // // Price
 // const Client = require("./schema/clientSchema");
@@ -610,8 +610,110 @@ deleteOrder(id) {
     });
 }
 
+////////////////////////////////////////////////////////
+// ... existing code ...
 
-  
+addTechnician(technicianData) {
+    return new Promise((resolve, reject) => {
+        technicianData["createdDate"] = new Date();
+        technicianData["updatedDate"] = new Date();
+        let newTechnician = new Technician(technicianData);
+        newTechnician.save()
+            .then(data => {
+                console.log("Technician added successfully:", data);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error("Error adding technician:", err);
+                reject(err);
+            });
+    });
+}
+
+getTechnicians() {
+    return new Promise((resolve, reject) => {
+        Technician.find()
+            .then(data => {
+                console.log(`Found ${data.length} technicians`);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error('Error getting technicians:', err);
+                reject(err);
+            });
+    });
+}
+
+getTechnicianById(id) {
+    return new Promise((resolve, reject) => {
+        if (!id) {
+            reject('Technician ID is required');
+            return;
+        }
+
+        Technician.findById(id)
+            .then(data => {
+                if (!data) {
+                    console.log(`Technician not found: ${id}`);
+                    reject(`Technician not found: ${id}`);
+                }
+                console.log("Technician retrieved successfully:", data);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error('Error getting technician:', err);
+                reject(err);
+            });
+    });
+}
+
+updateTechnician(technician) {
+    return new Promise((resolve, reject) => {
+        if (!technician || !technician._id) {
+            reject('Technician ID is required');
+            return;
+        }
+
+        technician["updatedDate"] = new Date();
+        
+        Technician.findByIdAndUpdate(technician["_id"], technician, { new: true })
+            .then(data => {
+                if (!data) {
+                    console.log(`Technician not found: ${technician["_id"]}`);
+                    reject(`Technician not found: ${technician["_id"]}`);
+                }
+                console.log("Technician updated successfully:", data);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error('Error updating technician:', err);
+                reject(err);
+            });
+    });
+}
+
+deleteTechnician(id) {
+    return new Promise((resolve, reject) => {
+        if (!id) {
+            reject('Technician ID is required');
+            return;
+        }
+
+        Technician.findByIdAndDelete(id)
+            .then(data => {
+                if (!data) {
+                    console.log(`Technician not found: ${id}`);
+                    reject(`Technician not found: ${id}`);
+                }
+                console.log("Technician deleted successfully:", data);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error('Error deleting technician:', err);
+                reject(err);
+            });
+    });
+}
 }
 
 module.exports = Database;
