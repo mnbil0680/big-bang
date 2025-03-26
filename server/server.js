@@ -290,7 +290,70 @@ app.delete('/inventory/:id', (req, res) => {
         });
 });
 ////////////////////////////////////////////////
+// Order Routes
+app.post('/orders', (req, res) => {
+    const body = req.body;
+    db.createOrder(body)
+        .then(data => {
+            res.send(data);
+        })
+        .catch(err => {
+            res.status(500).send(err);
+        });
+});
 
+app.get('/orders', (req, res) => {
+    db.getOrders()
+        .then(data => {
+            res.send(data);
+        })
+        .catch(err => {
+            res.status(500).send(err);
+        });
+});
+
+app.get('/orders/:id', (req, res) => {
+    const { id } = req.params;
+    db.getOrderById(id)
+        .then(data => {
+            if(!data) {
+                res.status(404).send(`Order not found: ${id}`);
+            }
+            res.send(data);
+        })
+        .catch(err => {
+            res.status(500).send(err);
+        });
+});
+
+app.put('/orders/:id', (req, res) => {
+    const { id } = req.params;
+    const order = { ...req.body, _id: id };
+    db.updateOrder(order)
+        .then(data => {
+            if(!data) {
+                res.status(404).send(`Order not found: ${id}`);
+            }
+            res.send(data);
+        })
+        .catch(err => {
+            res.status(400).send(err);
+        });
+});
+
+app.delete('/orders/:id', (req, res) => {
+    const { id } = req.params;
+    db.deleteOrder(id)
+        .then(data => {
+            if(!data) {
+                res.status(404).send(`Order not found: ${id}`);
+            }
+            res.send(data);
+        })
+        .catch(err => {
+            res.status(500).send(err);
+        });
+});
 
 
 
