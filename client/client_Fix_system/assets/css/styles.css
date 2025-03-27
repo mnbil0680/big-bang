@@ -188,6 +188,14 @@ a:hover {
 }
 .sidebar-item {
   margin-bottom: 5px;
+  height: 100%;
+}
+.sidebar-item a {
+  height: 100%;
+  padding-right: 1rem;
+}
+.sidebar.collapsed .sidebar-item a {
+  padding-right: 0rem;
 }
 .sidebar.collapsed .sidebar-item {
   margin-bottom: 0px;
@@ -211,11 +219,12 @@ a:hover {
   align-items: center;
   color: rgba(255, 255, 255, 0.8);
   transition: all var(--transition-speed);
+  width: 100%;
 }
 
 .sidebar-link i {
   margin-left: 10px;
-  font-size: 1.1rem;
+  font-size: 1.4rem;
   transition: margin var(--transition-speed);
 }
 
