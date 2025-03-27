@@ -12,10 +12,10 @@ const Technician = require('./schema/Fix/technicianSchema');
 
 // Price
 const Client = require("./schema/Price/clientSchema");
-//const Product = require("./schema/productSchema");
-//const Currency = require("./schema/currencySchema");
-//const Rule = require("./schema/rulesSchema");
-//const Show = require("./schema/showSchema");
+const Product = require("./schema/Price/productSchema");
+const Currency = require("./schema/Price/currencySchema");
+const Rule = require("./schema/Price/rulesSchema");
+const Show = require("./schema/Price/showSchema");
 
 
 class Database {
@@ -837,6 +837,446 @@ getClientsByEmail(email) {
             })
             .catch(err => {
                 console.error('Error searching clients by email:', err);
+                reject(err);
+            });
+    });
+}
+
+////////////////////////////////
+addProduct(product) {
+    return new Promise((resolve, reject) => {
+        if (!product) {
+            reject('Product data is required');
+            return;
+        }
+
+        product.createdDate = new Date();
+        product.updatedDate = new Date();
+        
+        const newProduct = new Product(product);
+        newProduct.save()
+            .then(data => {
+                console.log("Product added successfully:", data);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error("Error adding product:", err);
+                reject(err);
+            });
+    });
+}
+
+getProducts() {
+    return new Promise((resolve, reject) => {
+        Product.find()
+            .then(data => {
+                console.log(`Found ${data.length} products`);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error('Error getting products:', err);
+                reject(err);
+            });
+    });
+}
+
+getProductByID(id) {
+    return new Promise((resolve, reject) => {
+        Product.findById(id)
+            .then(data => {
+                if (!data) {
+                    console.log(`Product not found: ${id}`);
+                    reject(`Product not found: ${id}`);
+                }
+                console.log("Product retrieved successfully:", data);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error('Error getting product:', err);
+                reject(err);
+            });
+    });
+}
+
+updateProduct(product) {
+    return new Promise((resolve, reject) => {
+        if (!product || !product._id) {
+            reject('Product ID is required for update');
+            return;
+        }
+
+        product.updatedDate = new Date();
+        Product.findByIdAndUpdate(product._id, product, { 
+            new: true,
+            runValidators: true 
+        })
+            .then(data => {
+                if (!data) {
+                    console.log(`Product not found: ${product._id}`);
+                    reject(`Product not found: ${product._id}`);
+                }
+                console.log("Product updated successfully:", data);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error('Error updating product:', err);
+                reject(err);
+            });
+    });
+}
+
+deleteProductById(id) {
+    return new Promise((resolve, reject) => {
+        if (!id) {
+            reject('Product ID is required');
+            return;
+        }
+
+        Product.findByIdAndDelete(id)
+            .then(data => {
+                if (!data) {
+                    console.log(`Product not found: ${id}`);
+                    reject(`Product not found: ${id}`);
+                }
+                console.log("Product deleted successfully:", data);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error('Error deleting product:', err);
+                reject(err);
+            });
+    });
+}
+
+////////////////////////////////////////
+
+addCurrency(currency) {
+    return new Promise((resolve, reject) => {
+        if (!currency) {
+            reject('Currency data is required');
+            return;
+        }
+
+        const newCurrency = new Currency(currency);
+        newCurrency.save()
+            .then(data => {
+                console.log("Currency added successfully:", data);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error('Error adding currency:', err);
+                reject(err);
+            });
+    });
+}
+
+getCurrencies() {
+    return new Promise((resolve, reject) => {
+        Currency.find()
+            .then(data => {
+                console.log("Currencies retrieved successfully:", data.length);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error('Error getting currencies:', err);
+                reject(err);
+            });
+    });
+}
+
+getCurrencyByID(id) {
+    return new Promise((resolve, reject) => {
+        if (!id) {
+            reject('Currency ID is required');
+            return;
+        }
+
+        Currency.findById(id)
+            .then(data => {
+                if (!data) {
+                    console.log(`Currency not found: ${id}`);
+                    reject(`Currency not found: ${id}`);
+                }
+                console.log("Currency retrieved successfully:", data);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error('Error getting currency:', err);
+                reject(err);
+            });
+    });
+}
+
+updateCurrency(currency) {
+    return new Promise((resolve, reject) => {
+        if (!currency || !currency._id) {
+            reject('Currency ID is required');
+            return;
+        }
+
+        currency.updatedDate = new Date();
+        Currency.findByIdAndUpdate(currency._id, currency, { 
+            new: true,
+            runValidators: true 
+        })
+            .then(data => {
+                if (!data) {
+                    console.log(`Currency not found: ${currency._id}`);
+                    reject(`Currency not found: ${currency._id}`);
+                }
+                console.log("Currency updated successfully:", data);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error('Error updating currency:', err);
+                reject(err);
+            });
+    });
+}
+
+deleteCurrencyById(id) {
+    return new Promise((resolve, reject) => {
+        if (!id) {
+            reject('Currency ID is required');
+            return;
+        }
+
+        Currency.findByIdAndDelete(id)
+            .then(data => {
+                if (!data) {
+                    console.log(`Currency not found: ${id}`);
+                    reject(`Currency not found: ${id}`);
+                }
+                console.log("Currency deleted successfully:", data);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error('Error deleting currency:', err);
+                reject(err);
+            });
+    });
+}
+///////////////////////////////////////////
+addRule(rule) {
+    return new Promise((resolve, reject) => {
+        if (!rule) {
+            reject('Rule data is required');
+            return;
+        }
+
+        rule.createdDate = new Date();
+        rule.updatedDate = new Date();
+        
+        const newRule = new Rule(rule);
+        newRule.save()
+            .then(data => {
+                console.log("Rule added successfully:", data);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error("Error adding rule:", err);
+                reject(err);
+            });
+    });
+}
+
+getRules() {
+    return new Promise((resolve, reject) => {
+        Rule.find()
+            .then(data => {
+                console.log(`Found ${data.length} rules`);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error('Error getting rules:', err);
+                reject(err);
+            });
+    });
+}
+
+getRuleByID(id) {
+    return new Promise((resolve, reject) => {
+        if (!id) {
+            reject('Rule ID is required');
+            return;
+        }
+
+        Rule.findById(id)
+            .then(data => {
+                if (!data) {
+                    console.log(`Rule not found: ${id}`);
+                    reject(`Rule not found: ${id}`);
+                }
+                console.log("Rule retrieved successfully:", data);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error('Error getting rule:', err);
+                reject(err);
+            });
+    });
+}
+
+updateRule(rule) {
+    return new Promise((resolve, reject) => {
+        if (!rule || !rule._id) {
+            reject('Rule ID is required');
+            return;
+        }
+
+        rule.updatedDate = new Date();
+        
+        Rule.findByIdAndUpdate(rule._id, rule, { new: true })
+            .then(data => {
+                if (!data) {
+                    console.log(`Rule not found: ${rule._id}`);
+                    reject(`Rule not found: ${rule._id}`);
+                }
+                console.log("Rule updated successfully:", data);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error('Error updating rule:', err);
+                reject(err);
+            });
+    });
+}
+
+deleteRuleById(id) {
+    return new Promise((resolve, reject) => {
+        if (!id) {
+            reject('Rule ID is required');
+            return;
+        }
+
+        Rule.findByIdAndDelete(id)
+            .then(data => {
+                if (!data) {
+                    console.log(`Rule not found: ${id}`);
+                    reject(`Rule not found: ${id}`);
+                }
+                console.log("Rule deleted successfully:", data);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error('Error deleting rule:', err);
+                reject(err);
+            });
+    });
+}
+/////////////////////////////////////////////
+addShow(show) {
+    return new Promise((resolve, reject) => {
+        if (!show) {
+            reject('Show data is required');
+            return;
+        }
+
+        show.createdDate = new Date();
+        show.updatedDate = new Date();
+        
+        const newShow = new Show(show);
+        newShow.save()
+            .then(data => {
+                console.log("Show added successfully:", data);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error("Error adding show:", err);
+                reject(err);
+            });
+    });
+}
+
+getShows() {
+    return new Promise((resolve, reject) => {
+        Show.find()
+            .populate("clientId")
+            .populate("products")
+            .populate("rules")
+            .then(data => {
+                console.log(`Found ${data.length} shows`);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error("Error fetching shows:", err);
+                reject(err);
+            });
+    });
+}
+
+getShowByID(id) {
+    return new Promise((resolve, reject) => {
+        if (!id) {
+            reject('Show ID is required');
+            return;
+        }
+
+        Show.findById(id)
+            .populate("clientId")
+            .populate("products")
+            .populate("rules")
+            .then(data => {
+                if (!data) {
+                    console.log(`Show not found: ${id}`);
+                    reject(`Show not found: ${id}`);
+                }
+                console.log("Show retrieved successfully:", data);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error('Error getting show:', err);
+                reject(err);
+            });
+    });
+}
+
+updateShow(show) {
+    return new Promise((resolve, reject) => {
+        if (!show || !show._id) {
+            reject('Show ID is required');
+            return;
+        }
+
+        show.updatedDate = new Date();
+        
+        Show.findByIdAndUpdate(show._id, show, { new: true })
+            .populate("clientId")
+            .populate("products")
+            .populate("rules")
+            .then(data => {
+                if (!data) {
+                    console.log(`Show not found: ${show._id}`);
+                    reject(`Show not found: ${show._id}`);
+                }
+                console.log("Show updated successfully:", data);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error('Error updating show:', err);
+                reject(err);
+            });
+    });
+}
+
+deleteShowById(id) {
+    return new Promise((resolve, reject) => {
+        if (!id) {
+            reject('Show ID is required');
+            return;
+        }
+
+        Show.findByIdAndDelete(id)
+            .then(data => {
+                if (!data) {
+                    console.log(`Show not found: ${id}`);
+                    reject(`Show not found: ${id}`);
+                }
+                console.log("Show deleted successfully:", data);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error('Error deleting show:', err);
                 reject(err);
             });
     });
