@@ -421,6 +421,104 @@ app.delete('/orders/:id', (req, res) => {
         });
 });
 
+//==========
+// الاسعار
+//==========
+
+app.post('/clients', (req, res) => {
+    const body = req.body;
+    db.addClient(body)
+        .then(data => {
+            res.status(201).send(data);
+        })
+        .catch(err => {
+            res.status(400).send({ error: "Failed to add client", message: err.message });
+        });
+});
+
+app.get('/clients', (req, res) => {
+    const { email } = req.query;
+    if (email) {
+        db.getClientsByEmail(email)
+            .then(data => {
+                res.send(data);
+            })
+            .catch(err => {
+                res.status(500).send({ error: "Failed to fetch clients", message: err.message });
+            });
+    } else {
+        db.getClients()
+            .then(data => {
+                res.send(data);
+            })
+            .catch(err => {
+                res.status(500).send({ error: "Failed to fetch clients", message: err.message });
+            });
+    }
+});
+
+app.get('/clients/:id', (req, res) => {
+    const { id } = req.params;
+    db.getClientByID(id)
+        .then(data => {
+            if (!data) {
+                return res.status(404).send({ error: `Client not found: ${id}` });
+            }
+            res.send(data);
+        })
+        .catch(err => {
+            res.status(500).send({ error: "Failed to fetch client", message: err.message });
+        });
+});
+
+
+
+app.get('/clients/:email', (req, res) => {
+    const { email } = req.params;
+    db.getClientsByEmail(email)
+        .then(data => {
+            if (!data || data.length === 0) {
+                return res.status(404).send({ error: `No clients found with email: ${email}` });
+            }
+            res.send(data);
+        })
+        .catch(err => {
+            res.status(500).send({ error: "Failed to fetch clients by email", message: err.message });
+        });
+});
+
+
+app.put('/clients/:id', (req, res) => {
+    const { id } = req.params;
+    const body = req.body;
+    db.updateClient({ ...body, _id: id })
+        .then(data => {
+            if (!data) {
+                return res.status(404).send({ error: `Client not found: ${id}` });
+            }
+            res.send(data);
+        })
+        .catch(err => {
+            res.status(400).send({ error: "Failed to update client", message: err.message });
+        });
+});
+
+app.delete('/clients/:id', (req, res) => {
+    const { id } = req.params;
+    db.deleteClientById(id)
+        .then(data => {
+            if (!data) {
+                return res.status(404).send({ error: `Client not found: ${id}` });
+            }
+            res.send({ message: "Client deleted successfully" });
+        })
+        .catch(err => {
+            res.status(500).send({ error: "Failed to delete client", message: err.message });
+        });
+});
+
+
+// ... rest of your code ...
 
 
 
