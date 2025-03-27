@@ -252,7 +252,26 @@ app.get("/inventory/:id", (req, res) => {
       res.status(500).send(err);
     });
 });
+app.put("/inventory/:id/add-stock", (req, res) => {
+  const { id } = req.params;
+  const { quantity } = req.body;
 
+  if (!quantity || quantity <= 0) {
+    return res.status(400).send("كمية غير صالحة!");
+  }
+
+  db.getInventoryItemById(id)
+    .then((item) => {
+      if (!item) return res.status(404).send(`العنصر غير موجود: ${id}`);
+
+      return db.updateInventoryItem({
+        _id: id,
+        quantity: (item.quantity || 0) + quantity,
+      });
+    })
+    .then((updatedItem) => res.send(updatedItem))
+    .catch((err) => res.status(500).send(err));
+});
 app.post("/inventory", (req, res) => {
   const body = req.body;
   db.addInventoryItem(body)
@@ -493,12 +512,10 @@ app.get("/clients/:email", (req, res) => {
       res.send(data);
     })
     .catch((err) => {
-      res
-        .status(500)
-        .send({
-          error: "Failed to fetch clients by email",
-          message: err.message,
-        });
+      res.status(500).send({
+        error: "Failed to fetch clients by email",
+        message: err.message,
+      });
     });
 });
 

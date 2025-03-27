@@ -422,7 +422,7 @@
                       </div>
                       <div class="flex-grow-1 ms-3">
                         <h6 class="mb-1">إجمالي العناصر</h6>
-                        <h4 class="mb-0">150</h4>
+                        <h4 class="mb-0" id="totalItems">0</h4>
                       </div>
                     </div>
                   </div>
@@ -441,7 +441,7 @@
                       </div>
                       <div class="flex-grow-1 ms-3">
                         <h6 class="mb-1">مخزون منخفض</h6>
-                        <h4 class="mb-0">12</h4>
+                        <h4 class="mb-0" id="lowStockCount">0</h4>
                       </div>
                     </div>
                   </div>
@@ -458,7 +458,7 @@
                       </div>
                       <div class="flex-grow-1 ms-3">
                         <h6 class="mb-1">نفذ من المخزون</h6>
-                        <h4 class="mb-0">5</h4>
+                        <h4 class="mb-0" id="outOfStockCount">0</h4>
                       </div>
                     </div>
                   </div>
@@ -475,7 +475,7 @@
                       </div>
                       <div class="flex-grow-1 ms-3">
                         <h6 class="mb-1">قيمة المخزون</h6>
-                        <h4 class="mb-0">45,000 ريال</h4>
+                        <h4 class="mb-0" id="inventoryValue">0 ريال</h4>
                       </div>
                     </div>
                   </div>
@@ -865,7 +865,7 @@
       aria-labelledby="addStockModalLabel"
       aria-hidden="true"
     >
-      <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title" id="addStockModalLabel">إضافة مخزون</h5>
@@ -873,64 +873,34 @@
               type="button"
               class="btn-close"
               data-bs-dismiss="modal"
-              aria-label="إغلاق"
+              aria-label="Close"
             ></button>
           </div>
           <div class="modal-body">
-            <form id="addStockForm" class="needs-validation" novalidate>
+            <form id="addStockForm">
+              <!-- Item Selection -->
               <div class="mb-3">
-                <label for="stockItemId" class="form-label">العنصر</label>
-                <select class="form-select" id="stockItemId" required>
+                <label for="existingItem" class="form-label">اختر العنصر</label>
+                <select id="existingItem" class="form-select">
                   <option value="">اختر العنصر</option>
-                  <!-- سيتم ملء هذا القسم بواسطة JavaScript -->
+                  <!-- Items will be added dynamically here -->
                 </select>
-                <div class="invalid-feedback">يرجى اختيار العنصر</div>
               </div>
+
+              <!-- Quantity Input -->
               <div class="mb-3">
-                <label for="stockQuantity" class="form-label"
-                  >الكمية المضافة</label
-                >
+                <label for="stockQuantity" class="form-label">الكمية</label>
                 <input
                   type="number"
-                  class="form-control"
                   id="stockQuantity"
+                  class="form-control"
                   min="1"
-                  value="1"
                   required
                 />
-                <div class="invalid-feedback">يرجى إدخال الكمية</div>
               </div>
-              <div class="mb-3">
-                <label for="stockDate" class="form-label">تاريخ الإضافة</label>
-                <input
-                  type="date"
-                  class="form-control"
-                  id="stockDate"
-                  required
-                />
-                <div class="invalid-feedback">يرجى تحديد تاريخ الإضافة</div>
-              </div>
-              <div class="mb-3">
-                <label for="stockNotes" class="form-label">ملاحظات</label>
-                <textarea
-                  class="form-control"
-                  id="stockNotes"
-                  rows="2"
-                ></textarea>
-              </div>
+
+              <button type="submit" class="btn btn-success">إضافة</button>
             </form>
-          </div>
-          <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              data-bs-dismiss="modal"
-            >
-              إلغاء
-            </button>
-            <button type="button" class="btn btn-primary" id="saveStockBtn">
-              حفظ
-            </button>
           </div>
         </div>
       </div>
@@ -947,8 +917,7 @@
         new Date().getFullYear();
     </script>
     <!-- Custom JavaScript -->
-    <script src="assets/js/main.js"></script>
-
+    <script type="module" src="assets/js/inventory.js"></script>
     <script>
       document.addEventListener("DOMContentLoaded", () => {
         // Check if user is logged in by checking for a token
