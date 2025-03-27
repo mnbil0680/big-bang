@@ -1281,7 +1281,187 @@ deleteShowById(id) {
             });
     });
 }
+//////////////////////////////////////////////
+// Add these functions to your Database class
 
+addMaintenanceRequest(requestData) {
+    return new Promise((resolve, reject) => {
+        if (!requestData) {
+            reject('Maintenance request data is required');
+            return;
+        }
+
+        requestData.createdDate = new Date();
+        requestData.updatedDate = new Date();
+        
+        const newRequest = new MaintenanceRequest(requestData);
+        newRequest.save()
+            .then(data => {
+                console.log("Maintenance request added successfully:", data);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error("Error adding maintenance request:", err);
+                reject(err);
+            });
+    });
+}
+
+getMaintenanceRequests() {
+    return new Promise((resolve, reject) => {
+        MaintenanceRequest.find()
+            .populate('customerId')
+            .populate('technicianId')
+            .populate('partsUsed.partId')
+            .populate('notes.createdBy')
+            .then(data => {
+                console.log(`Found ${data.length} maintenance requests`);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error('Error getting maintenance requests:', err);
+                reject(err);
+            });
+    });
+}
+
+getMaintenanceRequestById(id) {
+    return new Promise((resolve, reject) => {
+        if (!id) {
+            reject('Maintenance request ID is required');
+            return;
+        }
+
+        MaintenanceRequest.findById(id)
+            .populate('customerId')
+            .populate('technicianId')
+            .populate('partsUsed.partId')
+            .populate('notes.createdBy')
+            .then(data => {
+                if (!data) {
+                    console.log(`Maintenance request not found: ${id}`);
+                    reject(`Maintenance request not found: ${id}`);
+                }
+                console.log("Maintenance request retrieved successfully:", data);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error('Error getting maintenance request:', err);
+                reject(err);
+            });
+    });
+}
+
+updateMaintenanceRequest(request) {
+    return new Promise((resolve, reject) => {
+        if (!request || !request._id) {
+            reject('Maintenance request ID is required');
+            return;
+        }
+
+        request.updatedDate = new Date();
+        
+        MaintenanceRequest.findByIdAndUpdate(request._id, request, { 
+            new: true,
+            runValidators: true 
+        })
+            .populate('customerId')
+            .populate('technicianId')
+            .populate('partsUsed.partId')
+            .populate('notes.createdBy')
+            .then(data => {
+                if (!data) {
+                    console.log(`Maintenance request not found: ${request._id}`);
+                    reject(`Maintenance request not found: ${request._id}`);
+                }
+                console.log("Maintenance request updated successfully:", data);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error('Error updating maintenance request:', err);
+                reject(err);
+            });
+    });
+}
+
+deleteMaintenanceRequest(id) {
+    return new Promise((resolve, reject) => {
+        if (!id) {
+            reject('Maintenance request ID is required');
+            return;
+        }
+
+        MaintenanceRequest.findByIdAndDelete(id)
+            .then(data => {
+                if (!data) {
+                    console.log(`Maintenance request not found: ${id}`);
+                    reject(`Maintenance request not found: ${id}`);
+                }
+                console.log("Maintenance request deleted successfully:", data);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error('Error deleting maintenance request:', err);
+                reject(err);
+            });
+    });
+}
+
+// Additional useful functions
+
+getMaintenanceRequestsByStatus(status) {
+    return new Promise((resolve, reject) => {
+        MaintenanceRequest.find({ status })
+            .populate('customerId')
+            .populate('technicianId')
+            .populate('partsUsed.partId')
+            .populate('notes.createdBy')
+            .then(data => {
+                console.log(`Found ${data.length} maintenance requests with status: ${status}`);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error('Error getting maintenance requests by status:', err);
+                reject(err);
+            });
+    });
+}
+
+getMaintenanceRequestsByTechnician(technicianId) {
+    return new Promise((resolve, reject) => {
+        MaintenanceRequest.find({ technicianId })
+            .populate('customerId')
+            .populate('technicianId')
+            .populate('partsUsed.partId')
+            .populate('notes.createdBy')
+            .then(data => {
+                console.log(`Found ${data.length} maintenance requests for technician: ${technicianId}`);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error('Error getting maintenance requests by technician:', err);
+                reject(err);
+            });
+    });
+}
+
+getMaintenanceRequestsByCustomer(customerId) {
+    return new Promise((resolve, reject) => {
+        MaintenanceRequest.find({ customerId })
+            .populate('customerId')
+            .populate('technicianId')
+            .populate('partsUsed.partId')
+            .populate('notes.createdBy')
+            .then(data => {
+                console.log(`Found ${data.length} maintenance requests for customer: ${customerId}`);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error('Error getting maintenance requests by customer:', err);
+                reject(err);
+            });
+    });
+}
 
 
 

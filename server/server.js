@@ -810,7 +810,118 @@ app.delete('/shows/:id', (req, res) => {
             res.status(500).send({ error: "Failed to delete show", message: err.message });
         });
 });
+///////////////////////////////////////////////
+// Maintenance Requests APIs
+app.post("/maintenance", (req, res) => {
+    const body = req.body;
+    db.addMaintenanceRequest(body)
+        .then(data => {
+            res.status(201).send(data);
+        })
+        .catch(err => {
+            res.status(400).send({ error: "Failed to create maintenance request", message: err.message });
+        });
+});
 
+app.get("/maintenance", (req, res) => {
+    const { status, technicianId, customerId } = req.query;
+    
+    let promise;
+    if (status) {
+        promise = db.getMaintenanceRequestsByStatus(status);
+    } else if (technicianId) {
+        promise = db.getMaintenanceRequestsByTechnician(technicianId);
+    } else if (customerId) {
+        promise = db.getMaintenanceRequestsByCustomer(customerId);
+    } else {
+        promise = db.getMaintenanceRequests();
+    }
+
+    promise
+        .then(data => {
+            res.send(data);
+        })
+        .catch(err => {
+            res.status(500).send({ error: "Failed to fetch maintenance requests", message: err.message });
+        });
+});
+
+app.get("/maintenance/:id", (req, res) => {
+    const { id } = req.params;
+    db.getMaintenanceRequestById(id)
+        .then(data => {
+            if (!data) {
+                return res.status(404).send({ error: `Maintenance request not found: ${id}` });
+            }
+            res.send(data);
+        })
+        .catch(err => {
+            res.status(500).send({ error: "Failed to fetch maintenance request", message: err.message });
+        });
+});
+
+app.put("/maintenance/:id", (req, res) => {
+    const { id } = req.params;
+    const body = req.body;
+    db.updateMaintenanceRequest({ ...body, _id: id })
+        .then(data => {
+            if (!data) {
+                return res.status(404).send({ error: `Maintenance request not found: ${id}` });
+            }
+            res.send(data);
+        })
+        .catch(err => {
+            res.status(400).send({ error: "Failed to update maintenance request", message: err.message });
+        });
+});
+
+app.delete("/maintenance/:id", (req, res) => {
+    const { id } = req.params;
+    db.deleteMaintenanceRequest(id)
+        .then(data => {
+            if (!data) {
+                return res.status(404).send({ error: `Maintenance request not found: ${id}` });
+            }
+            res.send({ message: "Maintenance request deleted successfully" });
+        })
+        .catch(err => {
+            res.status(500).send({ error: "Failed to delete maintenance request", message: err.message });
+        });
+});
+
+// Additional useful endpoints
+app.get("/maintenance/:status", (req, res) => {
+    const { status } = req.params;
+    db.getMaintenanceRequestsByStatus(status)
+        .then(data => {
+            res.send(data);
+        })
+        .catch(err => {
+            res.status(400).send({ error: "Failed to fetch maintenance requests by status", message: err.message });
+        });
+});
+
+app.get("/maintenance/:technicianId", (req, res) => {
+    const { technicianId } = req.params;
+    db.getMaintenanceRequestsByTechnician(technicianId)
+        .then(data => {
+            res.send(data);
+        })
+        .catch(err => {
+            res.status(400).send({ error: "Failed to fetch maintenance requests by technician", message: err.message });
+        });
+});
+
+app.get("/maintenance/:customerId", (req, res) => {
+    const { customerId } = req.params;
+    db.getMaintenanceRequestsByCustomer(customerId)
+        .then(data => {
+            res.send(data);
+        })
+        .catch(err => {
+            res.status(400).send({ error: "Failed to fetch maintenance requests by customer", message: err.message });
+        });
+});
 
 
 const port = process.env.PORT || 3000;
