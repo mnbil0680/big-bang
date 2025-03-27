@@ -1,8 +1,3 @@
-/**
- * نظام إدارة الصيانة والتركيب
- * ملف الأنماط المخصصة (CSS)
- */
-
 /* ===== المتغيرات ===== */
 :root {
   --primary: #0d6efd;
@@ -25,6 +20,7 @@
   --notification-width: 300px;
   --form-feedback-font-size: 0.875rem;
 }
+
 /* ===== عام ===== */
 html,
 body {
@@ -42,7 +38,78 @@ a {
 }
 
 a:hover {
-  color: #0257d5;
+  color: darken(var(--primary), 10%);
+}
+
+/* ===== الشريط الجانبي ===== */
+.sidebar {
+  width: var(--sidebar-width);
+  transition: width var(--transition-speed) ease-in-out;
+  overflow: hidden;
+  white-space: nowrap;
+  background-color: var(--dark);
+}
+
+.sidebar-content {
+  height: calc(100% - var(--topbar-height));
+  overflow-x: hidden;
+}
+
+.sidebar.collapsed {
+  width: var(--sidebar-collapsed-width);
+}
+
+.sidebar-nav {
+  height: 100%;
+  display: flex;
+  justify-content: space-between;
+  flex-direction: column;
+}
+
+/* ===== رأس الشريط الجانبي ===== */
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  transition: flex-direction var(--transition-speed) ease-in-out;
+  color: var(--light);
+}
+
+.sidebar.collapsed .toggle-sidebar {
+  order: -1;
+}
+
+/* ===== إخفاء النصوص عند الطي ===== */
+.company-name-container,
+.sidebar-text {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity var(--transition-speed) ease-in-out,
+    visibility var(--transition-speed) ease-in-out;
+}
+
+.sidebar.collapsed .company-name-container,
+.sidebar.collapsed .sidebar-text {
+  opacity: 0;
+  visibility: hidden;
+  width: 0;
+}
+
+/* ===== أيقونات الروابط ===== */
+.sidebar.collapsed .sidebar-link i {
+  color: var(--light) !important;
+  font-size: 1.5rem;
+}
+
+/* ===== زر طي الشريط الجانبي ===== */
+.toggle-sidebar {
+  border: none;
+  color: var(--light);
+}
+
+.toggle-sidebar i {
+  font-size: 1.5rem;
 }
 
 /* ===== مؤشر التحميل ===== */
@@ -119,15 +186,29 @@ a:hover {
   padding: 0;
   margin: 0;
 }
-
 .sidebar-item {
   margin-bottom: 5px;
 }
-
+.sidebar.collapsed .sidebar-item {
+  margin-bottom: 0px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+.sidebar.collapsed .sidebar-link i {
+  margin-left: 0px;
+}
+.sidebar.collapsed .sidebar-link {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
 .sidebar-link {
   display: flex;
   align-items: center;
-  padding: 10px 15px;
   color: rgba(255, 255, 255, 0.8);
   transition: all var(--transition-speed);
 }
@@ -149,26 +230,26 @@ a:hover {
 }
 
 /* الشريط الجانبي المصغر */
-body.sidebar-collapsed .sidebar {
+body.sidebar.content .sidebar {
   width: var(--sidebar-collapsed-width);
 }
 
-body.sidebar-collapsed .sidebar-logo,
-body.sidebar-collapsed .sidebar-link span {
+body.sidebar.content .sidebar-logo,
+body.sidebar.content .sidebar-link span {
   display: none;
 }
 
-body.sidebar-collapsed .sidebar-link {
+body.sidebar.content .sidebar-link {
   justify-content: center;
   padding: 15px 0;
 }
 
-body.sidebar-collapsed .sidebar-link i {
+body.sidebar.content .sidebar-link i {
   margin: 0;
   font-size: 1.4rem;
 }
 
-/* ===== المحتوى الرئيسي ===== */
+/* Main Content */
 .main-content {
   flex: 1;
   display: flex;
@@ -181,7 +262,13 @@ body.sidebar-collapsed .sidebar-link i {
   position: relative;
 }
 
-body.sidebar-collapsed .main-content {
+/* When the sidebar is collapsed */
+.sidebar.collapsed ~ .main-content {
+  width: calc(100% - var(--sidebar-collapsed-width));
+  margin-right: var(--sidebar-collapsed-width);
+}
+
+body.sidebar.content .main-content {
   width: calc(100% - var(--sidebar-collapsed-width));
   margin-right: var(--sidebar-collapsed-width);
 }
@@ -333,7 +420,7 @@ body.sidebar-collapsed .main-content {
     transform: translateX(100%);
   }
 
-  body:not(.sidebar-collapsed) .sidebar {
+  body:not(.sidebar.content) .sidebar {
     transform: translateX(0);
   }
 
@@ -362,7 +449,7 @@ body.sidebar-collapsed .main-content {
     margin-right: 200px;
   }
 
-  body.sidebar-collapsed .main-content {
+  body.sidebar.content .main-content {
     width: calc(100% - var(--sidebar-collapsed-width));
     margin-right: var(--sidebar-collapsed-width);
   }
@@ -754,7 +841,7 @@ body.sidebar-collapsed .main-content {
     margin-right: 0;
   }
 
-  body.sidebar-collapsed .main-content {
+  body.sidebar.content .main-content {
     width: 100%;
     margin-right: 0;
   }
@@ -782,7 +869,7 @@ body.sidebar-collapsed .main-content {
     margin-right: 200px;
   }
 
-  body.sidebar-collapsed .main-content {
+  body.sidebar.content .main-content {
     width: calc(100% - var(--sidebar-collapsed-width));
     margin-right: var(--sidebar-collapsed-width);
   }
@@ -1165,7 +1252,7 @@ body.sidebar-collapsed .main-content {
     margin-right: 0;
   }
 
-  body.sidebar-collapsed .main-content {
+  body.sidebar.content .main-content {
     width: 100%;
     margin-right: 0;
   }
@@ -1193,7 +1280,7 @@ body.sidebar-collapsed .main-content {
     margin-right: 200px;
   }
 
-  body.sidebar-collapsed .main-content {
+  body.sidebar.content .main-content {
     width: calc(100% - var(--sidebar-collapsed-width));
     margin-right: var(--sidebar-collapsed-width);
   }
@@ -1576,7 +1663,7 @@ body.sidebar-collapsed .main-content {
     margin-right: 0;
   }
 
-  body.sidebar-collapsed .main-content {
+  body.sidebar.content .main-content {
     width: 100%;
     margin-right: 0;
   }
@@ -1604,7 +1691,7 @@ body.sidebar-collapsed .main-content {
     margin-right: 200px;
   }
 
-  body.sidebar-collapsed .main-content {
+  body.sidebar.content .main-content {
     width: calc(100% - var(--sidebar-collapsed-width));
     margin-right: var(--sidebar-collapsed-width);
   }
@@ -1987,7 +2074,7 @@ body.sidebar-collapsed .main-content {
     margin-right: 0;
   }
 
-  body.sidebar-collapsed .main-content {
+  body.sidebar.content .main-content {
     width: 100%;
     margin-right: 0;
   }
@@ -2015,7 +2102,7 @@ body.sidebar-collapsed .main-content {
     margin-right: 200px;
   }
 
-  body.sidebar-collapsed .main-content {
+  body.sidebar.content .main-content {
     width: calc(100% - var(--sidebar-collapsed-width));
     margin-right: var(--sidebar-collapsed-width);
   }
@@ -2398,7 +2485,7 @@ body.sidebar-collapsed .main-content {
     margin-right: 0;
   }
 
-  body.sidebar-collapsed .main-content {
+  body.sidebar.content .main-content {
     width: 100%;
     margin-right: 0;
   }
@@ -2426,7 +2513,7 @@ body.sidebar-collapsed .main-content {
     margin-right: 200px;
   }
 
-  body.sidebar-collapsed .main-content {
+  body.sidebar.content .main-content {
     width: calc(100% - var(--sidebar-collapsed-width));
     margin-right: var(--sidebar-collapsed-width);
   }
@@ -2809,7 +2896,7 @@ body.sidebar-collapsed .main-content {
     margin-right: 0;
   }
 
-  body.sidebar-collapsed .main-content {
+  body.sidebar.content .main-content {
     width: 100%;
     margin-right: 0;
   }
@@ -2837,7 +2924,7 @@ body.sidebar-collapsed .main-content {
     margin-right: 200px;
   }
 
-  body.sidebar-collapsed .main-content {
+  body.sidebar.content .main-content {
     width: calc(100% - var(--sidebar-collapsed-width));
     margin-right: var(--sidebar-collapsed-width);
   }
@@ -3220,7 +3307,7 @@ body.sidebar-collapsed .main-content {
     margin-right: 0;
   }
 
-  body.sidebar-collapsed .main-content {
+  body.sidebar.content .main-content {
     width: 100%;
     margin-right: 0;
   }
@@ -3248,7 +3335,7 @@ body.sidebar-collapsed .main-content {
     margin-right: 200px;
   }
 
-  body.sidebar-collapsed .main-content {
+  body.sidebar.content .main-content {
     width: calc(100% - var(--sidebar-collapsed-width));
     margin-right: var(--sidebar-collapsed-width);
   }

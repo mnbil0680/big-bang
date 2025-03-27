@@ -41,6 +41,7 @@ addVoucher(voucher) {
     return new Promise((resolve, reject) => {
         Voucher["createdDate"] = new Date();
         Voucher["updatedDate"] = new Date();
+        console.log(voucher);
         let newVoucher = new Voucher(voucher); // Create a new note object
         newVoucher.save().then(doc => {
             resolve(doc);

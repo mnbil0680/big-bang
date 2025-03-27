@@ -83,6 +83,7 @@ function voucherSystem() {
         this.vouchers = vouchers;
         this.filteredVouchers = [...vouchers];
         this.applyFilters();
+        console.log(vouchers);
       } catch (error) {
         console.error("Error loading data:", error);
         alert("حدث خطأ أثناء تحميل البيانات. يرجى التحقق من اتصال الخادم.");
@@ -92,6 +93,11 @@ function voucherSystem() {
     // حفظ السند
     async saveVoucher() {
       try {
+        if (this.newVoucher.type === "receipt") {
+          this.newVoucher.type = "قبض";
+        } else {
+          this.newVoucher.type = "صرف";
+        }
         const response = await fetch(API + "/vouchers", {
           method: "POST",
           headers: {
@@ -369,7 +375,7 @@ function voucherSystem() {
       if (this.filters.toDate) {
         filtered = filtered.filter((v) => v.date <= this.filters.toDate);
       }
-
+      console.log(filtered);
       // فلترة حسب كلمة البحث
       if (this.filters.searchTerm) {
         const term = this.filters.searchTerm.toLowerCase();
