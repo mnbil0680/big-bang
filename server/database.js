@@ -10,12 +10,12 @@ const Inventory = require('./schema/Fix/inventorySchema');
 const Order = require('./schema/Fix/orderSchema');
 const Technician = require('./schema/Fix/technicianSchema');
 
-// // Price
-// const Client = require("./schema/clientSchema");
-// const Product = require("./schema/productSchema");
-// const Currency = require("./schema/currencySchema");
-// const Rule = require("./schema/rulesSchema");
-// const Show = require("./schema/showSchema");
+// Price
+const Client = require("./schema/Price/clientSchema");
+//const Product = require("./schema/productSchema");
+//const Currency = require("./schema/currencySchema");
+//const Rule = require("./schema/rulesSchema");
+//const Show = require("./schema/showSchema");
 
 
 class Database {
@@ -612,7 +612,6 @@ deleteOrder(id) {
 }
 
 ////////////////////////////////////////////////////////
-// ... existing code ...
 
 addTechnician(technicianData) {
     return new Promise((resolve, reject) => {
@@ -715,7 +714,141 @@ deleteTechnician(id) {
             });
     });
 }
+
+/////////////////////////////
+
+
+addClient(client) {
+    return new Promise((resolve, reject) => {
+        client["createdDate"] = new Date();
+        client["updatedDate"] = new Date();
+        
+        let newClient = new Client(client);
+        newClient.save()
+            .then(data => {
+                console.log("Client added successfully:", data);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error("Error adding client:", err);
+                reject(err);
+            });
+    });
 }
+
+getClients() {
+    return new Promise((resolve, reject) => {
+        Client.find()
+            .then(data => {
+                console.log(`Found ${data.length} clients`);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error('Error getting clients:', err);
+                reject(err);
+            });
+    });
+}
+
+getClientByID(id) {
+    return new Promise((resolve, reject) => {
+        if (!id) {
+            reject('Client ID is required');
+            return;
+        }
+
+        Client.findById(id)
+            .then(data => {
+                if (!data) {
+                    console.log(`Client not found: ${id}`);
+                    reject(`Client not found: ${id}`);
+                }
+                console.log("Client retrieved successfully:", data);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error('Error getting client:', err);
+                reject(err);
+            });
+    });
+}
+
+updateClient(client) {
+    return new Promise((resolve, reject) => {
+        if (!client || !client._id) {
+            reject('Client ID is required');
+            return;
+        }
+
+        client["updatedDate"] = new Date();
+        
+        Client.findByIdAndUpdate(client._id, client, { new: true })
+            .then(data => {
+                if (!data) {
+                    console.log(`Client not found: ${client._id}`);
+                    reject(`Client not found: ${client._id}`);
+                }
+                console.log("Client updated successfully:", data);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error('Error updating client:', err);
+                reject(err);
+            });
+    });
+}
+
+deleteClientById(id) {
+    return new Promise((resolve, reject) => {
+        if (!id) {
+            reject('Client ID is required');
+            return;
+        }
+
+        Client.findByIdAndDelete(id)
+            .then(data => {
+                if (!data) {
+                    console.log(`Client not found: ${id}`);
+                    reject(`Client not found: ${id}`);
+                }
+                console.log("Client deleted successfully:", data);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error('Error deleting client:', err);
+                reject(err);
+            });
+    });
+}
+
+getClientsByEmail(email) {
+    return new Promise((resolve, reject) => {
+        if (!email) {
+            resolve([]);
+            return;
+        }
+
+        const query = { email: { $regex: new RegExp(email, 'i') } };
+        
+        Client.find(query)
+            .then(data => {
+                console.log(`Found ${data.length} clients matching email: ${email}`);
+                resolve(data);
+            })
+            .catch(err => {
+                console.error('Error searching clients by email:', err);
+                reject(err);
+            });
+    });
+}
+
+
+
+
+
+}
+
+
 
 module.exports = Database;
 
