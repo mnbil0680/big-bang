@@ -4,7 +4,7 @@ function voucherSystem() {
     activeTab: "new",
     isPreview: false,
     newVoucher: {
-      type: "receipt",
+      type: "صرف",
       voucherNumber: "",
       date: new Date().toISOString().split("T")[0],
       entity: "",
@@ -215,10 +215,10 @@ function voucherSystem() {
 
     // عرض سند محدد
     viewVoucher(voucher) {
-      this.previewVoucher = { ...voucher };
+      // Deep clone the voucher to avoid mutating the original object
+      this.previewVoucher = JSON.parse(JSON.stringify(voucher));
       this.isPreview = true;
     },
-
     // طباعة سند محدد
     printVoucher(voucher) {
       this.previewVoucher = { ...voucher };
@@ -227,58 +227,86 @@ function voucherSystem() {
 
     // طباعة نافذة المعاينة
     printPreview() {
-      const printContent = document.getElementById("preview-voucher").innerHTML;
-      const originalContent = document.body.innerHTML;
+      const previewElem = document.getElementById("preview-voucher");
+      if (!previewElem) {
+        alert("لا يوجد محتوى للمعاينة للطباعة");
+        return;
+      }
 
-      document.body.innerHTML = `
-                <div dir="rtl" class="print-container">
-                    <div class="voucher-print">
-                        <div style="text-align: center; margin-bottom: 20px;">
-                            <h1 style="font-size: 24px; font-weight: bold;">${this.settings.companyName}</h1>
-                            <p>${this.settings.address}</p>
-                            <p>هاتف: ${this.settings.phone} | ${this.settings.email}</p>
-                        </div>
-                        ${printContent}
-                    </div>
-                </div>
-            `;
+      // Get the preview content
+      const printContent = previewElem.innerHTML;
 
-      window.print();
-      document.body.innerHTML = originalContent;
+      // Build a full HTML document for printing
+      const printHTML = `
+        <html dir="rtl">
+          <head>
+            <meta charset="UTF-8">
+            <title>طباعة المعاينة</title>
+            <style>
+              @media print {
+                body { padding: 20px; }
+                .voucher-print { width: 100%; }
+                table { width: 100%; border-collapse: collapse; }
+                th, td { border: 1px solid #000; padding: 8px; text-align: right; }
+                th { background-color: #f0f0f0; }
+              }
+              body {
+                font-family: sans-serif;
+              }
+              .print-container {
+                margin: 20px;
+              }
+              .print-header {
+                text-align: center;
+                margin-bottom: 20px;
+              }
+              .print-header h1 {
+                font-size: 24px;
+                font-weight: bold;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="print-container">
+              <div class="print-header">
+                <h1>${this.settings.companyName}</h1>
+                <p>${this.settings.address}</p>
+                <p>هاتف: ${this.settings.phone} | ${this.settings.email}</p>
+              </div>
+              <div class="voucher-print">
+                ${printContent}
+              </div>
+            </div>
+          </body>
+        </html>
+      `;
 
-      // إعادة تهيئة Alpine.js بعد التغيير في innerHTML
-      window.dispatchEvent(new CustomEvent("alpine:init"));
-      window.Alpine.initTree(document.body);
+      // Open a new window for printing
+      const printWindow = window.open("", "", "height=600,width=800");
+      if (printWindow) {
+        printWindow.document.write(printHTML);
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+      } else {
+        alert("تعذر فتح نافذة الطباعة.");
+      }
     },
 
     // طباعة القائمة الحالية
     printCurrentList() {
-      // Store Alpine instance and component state
-      const Alpine = window.Alpine;
-      const componentState = { ...this };
+      // Check if a table exists before proceeding
+      const tableElem = document.querySelector("table");
+      if (!tableElem) {
+        alert("لا يوجد جدول للطباعة");
+        return;
+      }
+      // Clone the table for printing
+      const table = tableElem.cloneNode(true);
 
-      // Clone the table and prepare for printing
-      const table = document.querySelector("table").cloneNode(true);
-
-      // Create a temporary container
-      const printContainer = document.createElement("div");
-      printContainer.innerHTML = `
-                <div dir="rtl" class="print-container">
-                    <div style="text-align: center; margin-bottom: 20px;">
-                        <h1 style="font-size: 24px; font-weight: bold;">${
-                          this.settings.companyName
-                        }</h1>
-                        <h2 style="font-size: 18px; margin: 10px 0;">قائمة السندات</h2>
-                        <p>تاريخ الطباعة: ${new Date().toLocaleDateString(
-                          "ar-SA"
-                        )}</p>
-                    </div>
-                    ${table.outerHTML}
-                </div>
-            `;
-
-      // Remove action buttons column
-      const rows = printContainer.querySelectorAll("tr");
+      // Remove action buttons column (assumed to be the last cell in every row)
+      const rows = table.querySelectorAll("tr");
       rows.forEach((row) => {
         const lastCell = row.lastElementChild;
         if (lastCell) {
@@ -286,44 +314,63 @@ function voucherSystem() {
         }
       });
 
-      // Store original content
-      const originalContent = document.body.innerHTML;
+      // Build the print content as a complete HTML document
+      const printContent = `
+        <html dir="rtl">
+          <head>
+            <meta charset="UTF-8">
+            <title>طباعة قائمة السندات</title>
+            <style>
+              @media print {
+                body { padding: 20px; }
+                table { width: 100%; border-collapse: collapse; }
+                th, td { border: 1px solid #000; padding: 8px; text-align: right; }
+                th { background-color: #f0f0f0; }
+              }
+              body {
+                font-family: sans-serif;
+              }
+              .print-container {
+                margin: 20px;
+              }
+              .print-header {
+                text-align: center;
+                margin-bottom: 20px;
+              }
+              .print-header h1 {
+                font-size: 24px;
+                font-weight: bold;
+              }
+              .print-header h2 {
+                font-size: 18px;
+                margin: 10px 0;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="print-container">
+              <div class="print-header">
+                <h1>${this.settings.companyName}</h1>
+                <h2>قائمة السندات</h2>
+                <p>تاريخ الطباعة: ${new Date().toLocaleDateString("ar-SA")}</p>
+              </div>
+              ${table.outerHTML}
+            </div>
+          </body>
+        </html>
+      `;
 
-      // Apply print styles
-      const style = document.createElement("style");
-      style.textContent = `
-                @media print {
-                    body { padding: 20px; }
-                    table { width: 100%; border-collapse: collapse; }
-                    th, td { border: 1px solid #000; padding: 8px; text-align: right; }
-                    th { background-color: #f0f0f0; }
-                }
-            `;
-      printContainer.prepend(style);
-
-      // Set print content
-      document.body.innerHTML = printContainer.innerHTML;
-
-      // Print
-      window.print();
-
-      // Restore original content
-      document.body.innerHTML = originalContent;
-
-      // Restore Alpine.js state
-      if (Alpine) {
-        Alpine.initTree(document.body);
-        Object.assign(this, componentState);
+      // Open a new window for printing so the original page stays intact
+      const printWindow = window.open("", "", "height=600,width=800");
+      if (printWindow) {
+        printWindow.document.write(printContent);
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+      } else {
+        alert("تعذر فتح نافذة الطباعة.");
       }
-      // After print, refresh the page
-      setTimeout(() => {
-        window.location.reload();
-      }, 1);
-
-      // Re-apply filters and update UI
-      this.$nextTick(() => {
-        this.applyFilters();
-      });
     },
 
     // تصدير البيانات إلى Excel
@@ -361,7 +408,7 @@ function voucherSystem() {
     // تطبيق الفلاتر
     applyFilters() {
       let filtered = [...this.vouchers];
-
+      console.log(this.filters);
       // فلترة حسب نوع السند
       if (this.filters.type) {
         filtered = filtered.filter((v) => v.type === this.filters.type);

@@ -1,503 +1,784 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>نظام إدارة سندات الصرف والقبض</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.10.5/cdn.min.js" defer></script>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body class="bg-gray-100 text-gray-900">
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.10.5/cdn.min.js"
+      defer
+    ></script>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="bg-gray-100 text-gray-900">
     <div x-data="voucherSystem()" class="container mx-auto my-8 px-4">
-        <!-- رأس الصفحة -->
-        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-            <div class="flex flex-col md:flex-row justify-between items-center mb-6">
-                <h1 class="text-3xl font-bold text-blue-800 mb-4 md:mb-0">نظام إدارة سندات الصرف والقبض</h1>
-                <div class="flex space-x-4 rtl:space-x-reverse">
-                    <template x-for="(tab, index) in tabs" :key="index">
-                        <button 
-                            @click="activeTab = tab.id" 
-                            :class="{'bg-blue-600 text-white': activeTab === tab.id, 'bg-gray-200 hover:bg-gray-300 text-gray-800': activeTab !== tab.id}"
-                            class="px-4 py-2 rounded-lg transition duration-200 font-semibold flex items-center">
-                            <span x-html="tab.icon" class="ml-2"></span>
-                            <span x-text="tab.name"></span>
-                        </button>
-                    </template>
-                </div>
-            </div>
-            
-            <!-- الإحصائيات العامة -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <h3 class="text-sm text-gray-600 mb-1">إجمالي سندات القبض</h3>
-                    <p class="text-2xl font-bold text-blue-700" x-text="formatCurrency(totalReceipts)"></p>
-                    <p class="text-xs text-gray-500 mt-1" x-text="'عدد السندات: ' + receiptVouchers.length"></p>
-                </div>
-                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <h3 class="text-sm text-gray-600 mb-1">إجمالي سندات الصرف</h3>
-                    <p class="text-2xl font-bold text-green-700" x-text="formatCurrency(totalPayments)"></p>
-                    <p class="text-xs text-gray-500 mt-1" x-text="'عدد السندات: ' + paymentVouchers.length"></p>
-                </div>
-                <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                    <h3 class="text-sm text-gray-600 mb-1">الرصيد النقدي</h3>
-                    <p class="text-2xl font-bold" :class="netBalance >= 0 ? 'text-purple-700' : 'text-red-700'" x-text="formatCurrency(netBalance)"></p>
-                    <p class="text-xs text-gray-500 mt-1">الفرق بين القبض والصرف</p>
-                </div>
-                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                    <h3 class="text-sm text-gray-600 mb-1">سندات هذا الشهر</h3>
-                    <p class="text-2xl font-bold text-yellow-700" x-text="formatCurrency(currentMonthTotal)"></p>
-                    <p class="text-xs text-gray-500 mt-1" x-text="'عدد السندات: ' + currentMonthCount"></p>
-                </div>
-            </div>
+      <!-- رأس الصفحة -->
+      <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <div
+          class="flex flex-col md:flex-row justify-between items-center mb-6"
+        >
+          <h1 class="text-3xl font-bold text-blue-800 mb-4 md:mb-0">
+            نظام إدارة سندات الصرف والقبض
+          </h1>
+          <div class="flex space-x-4 rtl:space-x-reverse">
+            <template x-for="(tab, index) in tabs" :key="index">
+              <button
+                @click="activeTab = tab.id"
+                :class="{'bg-blue-600 text-white': activeTab === tab.id, 'bg-gray-200 hover:bg-gray-300 text-gray-800': activeTab !== tab.id}"
+                class="px-4 py-2 rounded-lg transition duration-200 font-semibold flex items-center"
+              >
+                <span x-html="tab.icon" class="ml-2"></span>
+                <span x-text="tab.name"></span>
+              </button>
+            </template>
+          </div>
         </div>
-        
-        <!-- محتوى التبويبات -->
-        <div class="bg-white rounded-lg shadow-lg p-6">
-            <!-- تبويب إنشاء سند جديد -->
-            <div x-show="activeTab === 'new'" x-transition>
-                <h2 class="text-xl font-bold mb-6 pb-2 border-b border-gray-300 flex items-center">
-                    <span class="ml-2">🧾</span>
-                    <span>إنشاء سند جديد</span>
-                </h2>
-                
-                <form @submit.prevent="saveVoucher">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                        <div>
-                            <label class="block text-sm font-medium mb-1">نوع السند</label>
-                            <div class="flex space-x-4 rtl:space-x-reverse">
-                                <label class="inline-flex items-center">
-                                    <input type="radio" x-model="newVoucher.type" value="receipt" class="form-radio h-5 w-5 text-blue-600" required>
-                                    <span class="mr-2">سند قبض</span>
-                                </label>
-                                <label class="inline-flex items-center">
-                                    <input type="radio" x-model="newVoucher.type" value="payment" class="form-radio h-5 w-5 text-green-600" required>
-                                    <span class="mr-2">سند صرف</span>
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium mb-1">رقم السند</label>
-                            <input type="text" x-model="newVoucher.voucherNumber" class="w-full border rounded-lg p-2" required>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium mb-1">التاريخ</label>
-                            <input type="date" x-model="newVoucher.date" class="w-full border rounded-lg p-2" required>
-                        </div>
-                        
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium mb-1" x-text="newVoucher.type === 'receipt' ? 'استلمنا من السيد/ة' : 'صرفنا للسيد/ة'"></label>
-                            <input type="text" x-model="newVoucher.entity" class="w-full border rounded-lg p-2" required>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium mb-1">المبلغ</label>
-                            <input type="number" step="0.01" x-model="newVoucher.amount" class="w-full border rounded-lg p-2" required>
-                        </div>
-                        
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium mb-1">المبلغ كتابةً</label>
-                            <input type="text" x-model="newVoucher.amountInWords" class="w-full border rounded-lg p-2" required>
-                        </div>
-                        
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium mb-1">وذلك عن</label>
-                            <input type="text" x-model="newVoucher.description" class="w-full border rounded-lg p-2" required>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium mb-1">طريقة الدفع</label>
-                            <select x-model="newVoucher.paymentMethod" class="w-full border rounded-lg p-2" required>
-                                <option value="">-- اختر طريقة الدفع --</option>
-                                <option value="نقداً">نقداً</option>
-                                <option value="شيك">شيك</option>
-                                <option value="تحويل بنكي">تحويل بنكي</option>
-                                <option value="بطاقة ائتمان">بطاقة ائتمان</option>
-                            </select>
-                        </div>
-                        
-                        <!-- معلومات الشيك (تظهر فقط عند اختيار شيك) -->
-                        <div x-show="newVoucher.paymentMethod === 'شيك'" class="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border border-gray-200 rounded-lg">
-                            <div>
-                                <label class="block text-sm font-medium mb-1">رقم الشيك</label>
-                                <input type="text" x-model="newVoucher.checkNumber" class="w-full border rounded-lg p-2">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium mb-1">البنك</label>
-                                <input type="text" x-model="newVoucher.bank" class="w-full border rounded-lg p-2">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium mb-1">تاريخ الشيك</label>
-                                <input type="date" x-model="newVoucher.checkDate" class="w-full border rounded-lg p-2">
-                            </div>
-                        </div>
-                        
-                        <!-- معلومات التحويل البنكي (تظهر فقط عند اختيار تحويل بنكي) -->
-                        <div x-show="newVoucher.paymentMethod === 'تحويل بنكي'" class="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border border-gray-200 rounded-lg">
-                            <div>
-                                <label class="block text-sm font-medium mb-1">رقم التحويل</label>
-                                <input type="text" x-model="newVoucher.transferNumber" class="w-full border rounded-lg p-2">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium mb-1">البنك</label>
-                                <input type="text" x-model="newVoucher.bank" class="w-full border rounded-lg p-2">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="flex justify-end space-x-4 rtl:space-x-reverse">
-                        <button type="button" @click="resetForm" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition duration-200">
-                            إعادة تعيين
-                        </button>
-                        <button type="button" @click="previewVoucher" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition duration-200">
-                            معاينة السند
-                        </button>
-                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200">
-                            حفظ السند
-                        </button>
-                    </div>
-                </form>
-            </div>
-            
-            <!-- تبويب عرض السندات -->
-            <div x-show="activeTab === 'list'" x-transition>
-                <h2 class="text-xl font-bold mb-6 pb-2 border-b border-gray-300 flex items-center">
-                    <span class="ml-2">📋</span>
-                    <span>قائمة السندات</span>
-                </h2>
-                
-                <!-- أدوات التصفية -->
-                <div class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium mb-1">نوع السند</label>
-                            <select x-model="filters.type" class="w-full border rounded-lg p-2" @change="applyFilters()">
-                                <option value="">الكل</option>
-                                <option value="receipt">سندات القبض</option>
-                                <option value="payment">سندات الصرف</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-1">من تاريخ</label>
-                            <input type="date" x-model="filters.fromDate" class="w-full border rounded-lg p-2" @change="applyFilters()">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-1">إلى تاريخ</label>
-                            <input type="date" x-model="filters.toDate" class="w-full border rounded-lg p-2" @change="applyFilters()">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-1">بحث</label>
-                            <input type="text" x-model="filters.searchTerm" placeholder="رقم السند، الاسم، الوصف..." class="w-full border rounded-lg p-2" @input="applyFilters()">
-                        </div>
-                    </div>
-                    <div class="mt-4 flex justify-between">
-                        <button @click="clearFilters" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition duration-200">
-                            مسح التصفية
-                        </button>
-                        <div class="space-x-2 rtl:space-x-reverse">
-                            <button @click="exportToExcel" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200">
-                                تصدير Excel
-                            </button>
-                            <button @click="printCurrentList" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition duration-200">
-                                طباعة القائمة
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- جدول السندات -->
-                <div class="overflow-x-auto">
-                    <table class="min-w-full bg-white border border-gray-300 rounded-lg">
-                        <thead>
-                            <tr class="bg-gray-100">
-                                <th class="py-2 px-4 border-b text-right">#</th>
-                                <th class="py-2 px-4 border-b text-right">النوع</th>
-                                <th class="py-2 px-4 border-b text-right">رقم السند</th>
-                                <th class="py-2 px-4 border-b text-right">التاريخ</th>
-                                <th class="py-2 px-4 border-b text-right">الاسم</th>
-                                <th class="py-2 px-4 border-b text-right">المبلغ</th>
-                                <th class="py-2 px-4 border-b text-right">الوصف</th>
-                                <th class="py-2 px-4 border-b text-right no-print">الإجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <template x-if="filteredVouchers.length > 0">
-                                <template x-for="(voucher, index) in filteredVouchers" :key="index">
-                                    <tr :class="index % 2 === 0 ? 'bg-white' : 'bg-gray-50'">
-                                        <td class="py-2 px-4 border-b" x-text="index + 1"></td>
-                                        <td class="py-2 px-4 border-b">
-                                            <span 
-                                                :class="voucher.type === 'receipt' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'"
-                                                class="px-2 py-1 rounded-full text-xs font-medium">
-                                                <span x-text="voucher.type === 'receipt' ? 'قبض' : 'صرف'"></span>
-                                            </span>
-                                        </td>
-                                        <td class="py-2 px-4 border-b" x-text="voucher.voucherNumber"></td>
-                                        <td class="py-2 px-4 border-b" x-text="formatDate(voucher.date)"></td>
-                                        <td class="py-2 px-4 border-b" x-text="voucher.entity"></td>
-                                        <td class="py-2 px-4 border-b font-semibold" x-text="formatCurrency(voucher.amount)"></td>
-                                        <td class="py-2 px-4 border-b" x-text="voucher.description"></td>
-                                        <td class="py-2 px-4 border-b no-print">
-                                            <div class="flex space-x-2 rtl:space-x-reverse">
-                                                <button @click="viewVoucher(voucher)" class="p-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200">
-                                                    <span>👁️</span>
-                                                </button>
-                                                <button @click="printVoucher(voucher)" class="p-1 bg-purple-100 text-purple-700 rounded hover:bg-purple-200">
-                                                    <span>🖨️</span>
-                                                </button>
-                                                <button @click="deleteVoucher(voucher)" class="p-1 bg-red-100 text-red-700 rounded hover:bg-red-200">
-                                                    <span>🗑️</span>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </template>
-                            </template>
-                            <template x-if="filteredVouchers.length === 0">
-                                <tr>
-                                    <td colspan="8" class="py-4 text-center text-gray-500">لا توجد سندات متطابقة مع معايير البحث</td>
-                                </tr>
-                            </template>
-                        </tbody>
-                        <tfoot>
-                            <tr class="bg-gray-100 font-bold">
-                                <td colspan="5" class="py-2 px-4 border-t text-left">الإجمالي:</td>
-                                <td class="py-2 px-4 border-t" x-text="formatCurrency(filteredTotal)"></td>
-                                <td colspan="2" class="py-2 px-4 border-t"></td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            </div>
-            
-            <!-- تبويب التقارير -->
-            <div x-show="activeTab === 'reports'" x-transition>
-                <h2 class="text-xl font-bold mb-6 pb-2 border-b border-gray-300 flex items-center">
-                    <span class="ml-2">📊</span>
-                    <span>التقارير المالية</span>
-                </h2>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                    <!-- تقرير توزيع السندات حسب النوع -->
-                    <div class="bg-white p-4 rounded-lg border border-gray-200 shadow">
-                        <h3 class="text-lg font-semibold mb-4">توزيع سندات القبض والصرف</h3>
-                        <div class="h-64">
-                            <canvas id="voucherTypeChart"></canvas>
-                        </div>
-                    </div>
-                    
-                    <!-- تقرير المصروفات الشهرية -->
-                    <div class="bg-white p-4 rounded-lg border border-gray-200 shadow">
-                        <h3 class="text-lg font-semibold mb-4">حركة السندات الشهرية</h3>
-                        <div class="h-64">
-                            <canvas id="monthlyChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="bg-white p-4 rounded-lg border border-gray-200 shadow mb-6">
-                    <h3 class="text-lg font-semibold mb-4">تحليل السندات حسب طريقة الدفع</h3>
-                    <div class="h-64">
-                        <canvas id="paymentMethodChart"></canvas>
-                    </div>
-                </div>
-                
-                <div class="bg-white p-4 rounded-lg border border-gray-200 shadow">
-                    <h3 class="text-lg font-semibold mb-4">الرصيد التراكمي</h3>
-                    <div class="h-64">
-                        <canvas id="balanceChart"></canvas>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- تبويب الإعدادات -->
-            <div x-show="activeTab === 'settings'" x-transition>
-                <h2 class="text-xl font-bold mb-6 pb-2 border-b border-gray-300 flex items-center">
-                    <span class="ml-2">⚙️</span>
-                    <span>إعدادات النظام</span>
-                </h2>
-                
-                <form @submit.prevent="saveSettings">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="bg-white p-6 rounded-lg border border-gray-200 shadow">
-                            <h3 class="text-lg font-semibold mb-4">معلومات الشركة</h3>
-                            
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium mb-1">اسم الشركة</label>
-                                <input type="text" x-model="settings.companyName" class="w-full border rounded-lg p-2">
-                            </div>
-                            
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium mb-1">شعار الشركة (URL)</label>
-                                <input type="text" x-model="settings.companyLogo" class="w-full border rounded-lg p-2">
-                            </div>
-                            
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium mb-1">العنوان</label>
-                                <textarea x-model="settings.address" class="w-full border rounded-lg p-2" rows="2"></textarea>
-                            </div>
-                            
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium mb-1">رقم الهاتف</label>
-                                <input type="text" x-model="settings.phone" class="w-full border rounded-lg p-2">
-                            </div>
-                            
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium mb-1">البريد الإلكتروني</label>
-                                <input type="email" x-model="settings.email" class="w-full border rounded-lg p-2">
-                            </div>
-                        </div>
-                        
-                        <div class="bg-white p-6 rounded-lg border border-gray-200 shadow">
-                            <h3 class="text-lg font-semibold mb-4">إعدادات النظام</h3>
-                            
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium mb-1">العملة</label>
-                                <select x-model="settings.currency" class="w-full border rounded-lg p-2">
-                                    <option value="ريال">ريال سعودي</option>
-                                    <option value="درهم">درهم إماراتي</option>
-                                    <option value="دينار">دينار كويتي</option>
-                                    <option value="دولار">دولار أمريكي</option>
-                                    <option value="يورو">يورو</option>
-                                </select>
-                            </div>
-                            
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium mb-1">البادئة لأرقام سندات القبض</label>
-                                <input type="text" x-model="settings.receiptPrefix" class="w-full border rounded-lg p-2" placeholder="مثال: REC-">
-                            </div>
-                            
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium mb-1">البادئة لأرقام سندات الصرف</label>
-                                <input type="text" x-model="settings.paymentPrefix" class="w-full border rounded-lg p-2" placeholder="مثال: PAY-">
-                            </div>
-                            
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium mb-1">توقيع المستلم (URL)</label>
-                                <input type="text" x-model="settings.receiverSignature" class="w-full border rounded-lg p-2">
-                            </div>
-                            
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium mb-1">توقيع المحاسب (URL)</label>
-                                <input type="text" x-model="settings.accountantSignature" class="w-full border rounded-lg p-2">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-6 flex justify-end">
-                        <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200">
-                            حفظ الإعدادات
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-        
-        <!-- نافذة معاينة السند -->
-        <div x-show="isPreview" x-cloak class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div class="bg-white rounded-lg shadow-lg max-w-3xl w-full relative max-h-[90vh] overflow-y-auto">
-                <button @click="isPreview = false" class="absolute top-2 left-2 text-gray-600 hover:text-red-600 p-2">
-                    ✖
-                </button>
-                
-                <div class="p-6 voucher-print" id="preview-voucher">
-                    <div class="receipt-header text-center mb-6">
-                        <h2 class="text-xl font-bold" x-text="previewVoucher.type === 'receipt' ? 'سند قبض' : 'سند صرف'"></h2>
-                        <div x-text="'رقم السند: ' + previewVoucher.voucherNumber" class="text-sm"></div>
-                        <div x-text="'التاريخ: ' + formatDate(previewVoucher.date)" class="text-sm"></div>
-                    </div>
-                    
-                    <div class="mb-6">
-                        <div class="field-row">
-                            <div class="field-label" x-text="previewVoucher.type === 'receipt' ? 'استلمنا من السيد/ة:' : 'صرفنا للسيد/ة:'"></div>
-                            <div x-text="previewVoucher.entity"></div>
-                        </div>
-                        
-                        <div class="field-row">
-                            <div class="field-label">مبلغ وقدره:</div>
-                            <div x-text="formatCurrency(previewVoucher.amount)"></div>
-                        </div>
-                        
-                        <div class="field-row">
-                            <div class="field-label">المبلغ كتابةً:</div>
-                            <div x-text="previewVoucher.amountInWords"></div>
-                        </div>
-                        
-                        <div class="field-row">
-                            <div class="field-label">وذلك عن:</div>
-                            <div x-text="previewVoucher.description"></div>
-                        </div>
-                        
-                        <div class="field-row">
-                            <div class="field-label">طريقة الدفع:</div>
-                            <div x-text="previewVoucher.paymentMethod"></div>
-                        </div>
-                        
-                        <template x-if="previewVoucher.paymentMethod === 'شيك'">
-                            <div>
-                                <div class="field-row">
-                                    <div class="field-label">رقم الشيك:</div>
-                                    <div x-text="previewVoucher.checkNumber"></div>
-                                </div>
-                                <div class="field-row">
-                                    <div class="field-label">البنك:</div>
-                                    <div x-text="previewVoucher.bank"></div>
-                                </div>
-                                <div class="field-row">
-                                    <div class="field-label">تاريخ الشيك:</div>
-                                    <div x-text="formatDate(previewVoucher.checkDate)"></div>
-                                </div>
-                            </div>
-                        </template>
-                        
-                        <template x-if="previewVoucher.paymentMethod === 'تحويل بنكي'">
-                            <div>
-                                <div class="field-row">
-                                    <div class="field-label">رقم التحويل:</div>
-                                    <div x-text="previewVoucher.transferNumber"></div>
-                                </div>
-                                <div class="field-row">
-                                    <div class="field-label">البنك:</div>
-                                    <div x-text="previewVoucher.bank"></div>
-                                </div>
-                            </div>
-                        </template>
-                    </div>
-                    
-                    <div class="signature-area">
-                        <div class="signature-box">
-                            <div class="signature-line"></div>
-                            <div>المستلم</div>
-                        </div>
-                        <div class="signature-box">
-                            <div class="signature-line"></div>
-                            <div>المحاسب</div>
-                        </div>
-                        <div class="signature-box">
-                            <div class="signature-line"></div>
-                            <div>المدير</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="p-4 border-t flex justify-end space-x-4 rtl:space-x-reverse">
-                    <button @click="isPreview = false" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition duration-200">
-                        إغلاق
-                    </button>
-                    <button @click="printPreview()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200">
-                        طباعة
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
 
+        <!-- الإحصائيات العامة -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h3 class="text-sm text-gray-600 mb-1">إجمالي سندات القبض</h3>
+            <p
+              class="text-2xl font-bold text-blue-700"
+              x-text="formatCurrency(totalReceipts)"
+            ></p>
+            <p
+              class="text-xs text-gray-500 mt-1"
+              x-text="'عدد السندات: ' + receiptVouchers.length"
+            ></p>
+          </div>
+          <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+            <h3 class="text-sm text-gray-600 mb-1">إجمالي سندات الصرف</h3>
+            <p
+              class="text-2xl font-bold text-green-700"
+              x-text="formatCurrency(totalPayments)"
+            ></p>
+            <p
+              class="text-xs text-gray-500 mt-1"
+              x-text="'عدد السندات: ' + paymentVouchers.length"
+            ></p>
+          </div>
+          <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+            <h3 class="text-sm text-gray-600 mb-1">الرصيد النقدي</h3>
+            <p
+              class="text-2xl font-bold"
+              :class="netBalance >= 0 ? 'text-purple-700' : 'text-red-700'"
+              x-text="formatCurrency(netBalance)"
+            ></p>
+            <p class="text-xs text-gray-500 mt-1">الفرق بين القبض والصرف</p>
+          </div>
+          <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <h3 class="text-sm text-gray-600 mb-1">سندات هذا الشهر</h3>
+            <p
+              class="text-2xl font-bold text-yellow-700"
+              x-text="formatCurrency(currentMonthTotal)"
+            ></p>
+            <p
+              class="text-xs text-gray-500 mt-1"
+              x-text="'عدد السندات: ' + currentMonthCount"
+            ></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- محتوى التبويبات -->
+      <div class="bg-white rounded-lg shadow-lg p-6">
+        <!-- تبويب إنشاء سند جديد -->
+        <div x-show="activeTab === 'new'" x-transition>
+          <h2
+            class="text-xl font-bold mb-6 pb-2 border-b border-gray-300 flex items-center"
+          >
+            <span class="ml-2">🧾</span>
+            <span>إنشاء سند جديد</span>
+          </h2>
+
+          <form @submit.prevent="saveVoucher">
+            <div
+              class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6"
+            >
+              <div>
+                <label class="block text-sm font-medium mb-1">نوع السند</label>
+                <div class="flex space-x-4 rtl:space-x-reverse">
+                  <label class="inline-flex items-center">
+                    <input
+                      type="radio"
+                      x-model="newVoucher.type"
+                      value="قبض"
+                      class="form-radio h-5 w-5 text-blue-600"
+                      required
+                    />
+                    <span class="mr-2">سند قبض</span>
+                  </label>
+                  <label class="inline-flex items-center">
+                    <input
+                      type="radio"
+                      x-model="newVoucher.type"
+                      value="صرف"
+                      class="form-radio h-5 w-5 text-green-600"
+                      required
+                    />
+                    <span class="mr-2">سند صرف</span>
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium mb-1">رقم السند</label>
+                <input
+                  type="text"
+                  x-model="newVoucher.voucherNumber"
+                  class="w-full border rounded-lg p-2"
+                  required
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium mb-1">التاريخ</label>
+                <input
+                  type="date"
+                  x-model="newVoucher.date"
+                  class="w-full border rounded-lg p-2"
+                  required
+                />
+              </div>
+
+              <div class="md:col-span-2">
+                <label
+                  class="block text-sm font-medium mb-1"
+                  x-text="newVoucher.type === 'قبض' ? 'استلمنا من السيد/ة:' : 'صرفنا للسيد/ة:'"
+                ></label>
+                <input
+                  type="text"
+                  x-model="newVoucher.entity"
+                  class="w-full border rounded-lg p-2"
+                  required
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium mb-1">المبلغ</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  x-model="newVoucher.amount"
+                  class="w-full border rounded-lg p-2"
+                  required
+                />
+              </div>
+
+              <div class="md:col-span-2">
+                <label class="block text-sm font-medium mb-1"
+                  >المبلغ كتابةً</label
+                >
+                <input
+                  type="text"
+                  x-model="newVoucher.amountInWords"
+                  class="w-full border rounded-lg p-2"
+                  required
+                />
+              </div>
+
+              <div class="md:col-span-2">
+                <label class="block text-sm font-medium mb-1">وذلك عن</label>
+                <input
+                  type="text"
+                  x-model="newVoucher.description"
+                  class="w-full border rounded-lg p-2"
+                  required
+                />
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium mb-1"
+                  >طريقة الدفع</label
+                >
+                <select
+                  x-model="newVoucher.paymentMethod"
+                  class="w-full border rounded-lg p-2"
+                  required
+                >
+                  <option value="">-- اختر طريقة الدفع --</option>
+                  <option value="نقداً">نقداً</option>
+                  <option value="شيك">شيك</option>
+                  <option value="تحويل بنكي">تحويل بنكي</option>
+                  <option value="بطاقة ائتمان">بطاقة ائتمان</option>
+                </select>
+              </div>
+
+              <!-- معلومات الشيك (تظهر فقط عند اختيار شيك) -->
+              <div
+                x-show="newVoucher.paymentMethod === 'شيك'"
+                class="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border border-gray-200 rounded-lg"
+              >
+                <div>
+                  <label class="block text-sm font-medium mb-1"
+                    >رقم الشيك</label
+                  >
+                  <input
+                    type="text"
+                    x-model="newVoucher.checkNumber"
+                    class="w-full border rounded-lg p-2"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-1">البنك</label>
+                  <input
+                    type="text"
+                    x-model="newVoucher.bank"
+                    class="w-full border rounded-lg p-2"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-1"
+                    >تاريخ الشيك</label
+                  >
+                  <input
+                    type="date"
+                    x-model="newVoucher.checkDate"
+                    class="w-full border rounded-lg p-2"
+                  />
+                </div>
+              </div>
+
+              <!-- معلومات التحويل البنكي (تظهر فقط عند اختيار تحويل بنكي) -->
+              <div
+                x-show="newVoucher.paymentMethod === 'تحويل بنكي'"
+                class="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border border-gray-200 rounded-lg"
+              >
+                <div>
+                  <label class="block text-sm font-medium mb-1"
+                    >رقم التحويل</label
+                  >
+                  <input
+                    type="text"
+                    x-model="newVoucher.transferNumber"
+                    class="w-full border rounded-lg p-2"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-1">البنك</label>
+                  <input
+                    type="text"
+                    x-model="newVoucher.bank"
+                    class="w-full border rounded-lg p-2"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="flex justify-end space-x-4 rtl:space-x-reverse">
+              <button
+                type="button"
+                @click="resetForm"
+                class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition duration-200"
+              >
+                إعادة تعيين
+              </button>
+              <button
+                type="button"
+                @click="previewVoucher"
+                class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition duration-200"
+              >
+                معاينة السند
+              </button>
+              <button
+                type="submit"
+                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200"
+              >
+                حفظ السند
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- تبويب عرض السندات -->
+        <div x-show="activeTab === 'list'" x-transition>
+          <h2
+            class="text-xl font-bold mb-6 pb-2 border-b border-gray-300 flex items-center"
+          >
+            <span class="ml-2">📋</span>
+            <span>قائمة السندات</span>
+          </h2>
+
+          <!-- أدوات التصفية -->
+          <div class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <label class="block text-sm font-medium mb-1">نوع السند</label>
+                <select
+                  x-model="filters.type"
+                  class="w-full border rounded-lg p-2"
+                  @change="applyFilters()"
+                >
+                  <option value="">الكل</option>
+                  <option value="قبض">سندات القبض</option>
+                  <option value="صرف">سندات الصرف</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">من تاريخ</label>
+                <input
+                  type="date"
+                  x-model="filters.fromDate"
+                  class="w-full border rounded-lg p-2"
+                  @change="applyFilters()"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">إلى تاريخ</label>
+                <input
+                  type="date"
+                  x-model="filters.toDate"
+                  class="w-full border rounded-lg p-2"
+                  @change="applyFilters()"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1">بحث</label>
+                <input
+                  type="text"
+                  x-model="filters.searchTerm"
+                  placeholder="رقم السند، الاسم، الوصف..."
+                  class="w-full border rounded-lg p-2"
+                  @input="applyFilters()"
+                />
+              </div>
+            </div>
+            <div class="mt-4 flex justify-between">
+              <button
+                @click="clearFilters"
+                class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition duration-200"
+              >
+                مسح التصفية
+              </button>
+              <div class="space-x-2 rtl:space-x-reverse">
+                <button
+                  @click="exportToExcel"
+                  class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200"
+                >
+                  تصدير Excel
+                </button>
+                <button
+                  @click="printCurrentList"
+                  class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition duration-200"
+                >
+                  طباعة القائمة
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- جدول السندات -->
+          <div class="overflow-x-auto">
+            <table
+              class="min-w-full bg-white border border-gray-300 rounded-lg"
+            >
+              <thead>
+                <tr class="bg-gray-100">
+                  <th class="py-2 px-4 border-b text-right">#</th>
+                  <th class="py-2 px-4 border-b text-right">النوع</th>
+                  <th class="py-2 px-4 border-b text-right">رقم السند</th>
+                  <th class="py-2 px-4 border-b text-right">التاريخ</th>
+                  <th class="py-2 px-4 border-b text-right">الاسم</th>
+                  <th class="py-2 px-4 border-b text-right">المبلغ</th>
+                  <th class="py-2 px-4 border-b text-right">الوصف</th>
+                  <th class="py-2 px-4 border-b text-right no-print">
+                    الإجراءات
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <template x-if="filteredVouchers.length > 0">
+                  <template
+                    x-for="(voucher, index) in filteredVouchers"
+                    :key="index"
+                  >
+                    <tr :class="index % 2 === 0 ? 'bg-white' : 'bg-gray-50'">
+                      <td class="py-2 px-4 border-b" x-text="index + 1"></td>
+                      <td class="py-2 px-4 border-b">
+                        <span
+                          :class="voucher.type === 'صرف' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'"
+                          class="px-2 py-1 rounded-full text-xs font-medium"
+                        >
+                          <span x-text="voucher.type"></span>
+                        </span>
+                      </td>
+                      <td
+                        class="py-2 px-4 border-b"
+                        x-text="voucher.voucherNumber"
+                      ></td>
+                      <td
+                        class="py-2 px-4 border-b"
+                        x-text="formatDate(voucher.date)"
+                      ></td>
+                      <td
+                        class="py-2 px-4 border-b"
+                        x-text="voucher.entity"
+                      ></td>
+                      <td
+                        class="py-2 px-4 border-b font-semibold"
+                        x-text="formatCurrency(voucher.amount)"
+                      ></td>
+                      <td
+                        class="py-2 px-4 border-b"
+                        x-text="voucher.description"
+                      ></td>
+                      <td class="py-2 px-4 border-b no-print">
+                        <div class="flex space-x-2 rtl:space-x-reverse">
+                          <button
+                            @click="viewVoucher(voucher)"
+                            class="p-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                          >
+                            <span>👁️</span>
+                          </button>
+                          <button
+                            @click="printVoucher(voucher)"
+                            class="p-1 bg-purple-100 text-purple-700 rounded hover:bg-purple-200"
+                          >
+                            <span>🖨️</span>
+                          </button>
+                          <button
+                            @click="deleteVoucher(voucher)"
+                            class="p-1 bg-red-100 text-red-700 rounded hover:bg-red-200"
+                          >
+                            <span>🗑️</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  </template>
+                </template>
+                <template x-if="filteredVouchers.length === 0">
+                  <tr>
+                    <td colspan="8" class="py-4 text-center text-gray-500">
+                      لا توجد سندات متطابقة مع معايير البحث
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+              <tfoot>
+                <tr class="bg-gray-100 font-bold">
+                  <td colspan="5" class="py-2 px-4 border-t text-left">
+                    الإجمالي:
+                  </td>
+                  <td
+                    class="py-2 px-4 border-t"
+                    x-text="formatCurrency(filteredTotal)"
+                  ></td>
+                  <td colspan="2" class="py-2 px-4 border-t"></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- تبويب التقارير -->
+        <div x-show="activeTab === 'reports'" x-transition>
+          <h2
+            class="text-xl font-bold mb-6 pb-2 border-b border-gray-300 flex items-center"
+          >
+            <span class="ml-2">📊</span>
+            <span>التقارير المالية</span>
+          </h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <!-- تقرير توزيع السندات حسب النوع -->
+            <div class="bg-white p-4 rounded-lg border border-gray-200 shadow">
+              <h3 class="text-lg font-semibold mb-4">
+                توزيع سندات القبض والصرف
+              </h3>
+              <div class="h-64">
+                <canvas id="voucherTypeChart"></canvas>
+              </div>
+            </div>
+
+            <!-- تقرير المصروفات الشهرية -->
+            <div class="bg-white p-4 rounded-lg border border-gray-200 shadow">
+              <h3 class="text-lg font-semibold mb-4">حركة السندات الشهرية</h3>
+              <div class="h-64">
+                <canvas id="monthlyChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="bg-white p-4 rounded-lg border border-gray-200 shadow mb-6"
+          >
+            <h3 class="text-lg font-semibold mb-4">
+              تحليل السندات حسب طريقة الدفع
+            </h3>
+            <div class="h-64">
+              <canvas id="paymentMethodChart"></canvas>
+            </div>
+          </div>
+
+          <div class="bg-white p-4 rounded-lg border border-gray-200 shadow">
+            <h3 class="text-lg font-semibold mb-4">الرصيد التراكمي</h3>
+            <div class="h-64">
+              <canvas id="balanceChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- تبويب الإعدادات -->
+        <div x-show="activeTab === 'settings'" x-transition>
+          <h2
+            class="text-xl font-bold mb-6 pb-2 border-b border-gray-300 flex items-center"
+          >
+            <span class="ml-2">⚙️</span>
+            <span>إعدادات النظام</span>
+          </h2>
+
+          <form @submit.prevent="saveSettings">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div
+                class="bg-white p-6 rounded-lg border border-gray-200 shadow"
+              >
+                <h3 class="text-lg font-semibold mb-4">معلومات الشركة</h3>
+                <div class="mb-4">
+                  <label class="block text-sm font-medium mb-1"
+                    >اسم الشركة</label
+                  >
+                  <input
+                    type="text"
+                    x-model="settings.companyName"
+                    class="w-full border rounded-lg p-2"
+                  />
+                </div>
+                <div class="mb-4">
+                  <label class="block text-sm font-medium mb-1"
+                    >شعار الشركة (URL)</label
+                  >
+                  <input
+                    type="text"
+                    x-model="settings.companyLogo"
+                    class="w-full border rounded-lg p-2"
+                  />
+                </div>
+                <div class="mb-4">
+                  <label class="block text-sm font-medium mb-1">العنوان</label>
+                  <textarea
+                    x-model="settings.address"
+                    class="w-full border rounded-lg p-2"
+                    rows="2"
+                  ></textarea>
+                </div>
+                <div class="mb-4">
+                  <label class="block text-sm font-medium mb-1"
+                    >رقم الهاتف</label
+                  >
+                  <input
+                    type="text"
+                    x-model="settings.phone"
+                    class="w-full border rounded-lg p-2"
+                  />
+                </div>
+                <div class="mb-4">
+                  <label class="block text-sm font-medium mb-1"
+                    >البريد الإلكتروني</label
+                  >
+                  <input
+                    type="email"
+                    x-model="settings.email"
+                    class="w-full border rounded-lg p-2"
+                  />
+                </div>
+              </div>
+              <div
+                class="bg-white p-6 rounded-lg border border-gray-200 shadow"
+              >
+                <h3 class="text-lg font-semibold mb-4">إعدادات النظام</h3>
+                <div class="mb-4">
+                  <label class="block text-sm font-medium mb-1">العملة</label>
+                  <select
+                    x-model="settings.currency"
+                    class="w-full border rounded-lg p-2"
+                  >
+                    <option value="ريال">ريال سعودي</option>
+                    <option value="درهم">درهم إماراتي</option>
+                    <option value="دينار">دينار كويتي</option>
+                    <option value="دولار">دولار أمريكي</option>
+                    <option value="يورو">يورو</option>
+                  </select>
+                </div>
+                <div class="mb-4">
+                  <label class="block text-sm font-medium mb-1"
+                    >البادئة لأرقام سندات القبض</label
+                  >
+                  <input
+                    type="text"
+                    x-model="settings.receiptPrefix"
+                    class="w-full border rounded-lg p-2"
+                    placeholder="مثال: REC-"
+                  />
+                </div>
+                <div class="mb-4">
+                  <label class="block text-sm font-medium mb-1"
+                    >البادئة لأرقام سندات الصرف</label
+                  >
+                  <input
+                    type="text"
+                    x-model="settings.paymentPrefix"
+                    class="w-full border rounded-lg p-2"
+                    placeholder="مثال: PAY-"
+                  />
+                </div>
+                <div class="mb-4">
+                  <label class="block text-sm font-medium mb-1"
+                    >توقيع المستلم (URL)</label
+                  >
+                  <input
+                    type="text"
+                    x-model="settings.receiverSignature"
+                    class="w-full border rounded-lg p-2"
+                  />
+                </div>
+                <div class="mb-4">
+                  <label class="block text-sm font-medium mb-1"
+                    >توقيع المحاسب (URL)</label
+                  >
+                  <input
+                    type="text"
+                    x-model="settings.accountantSignature"
+                    class="w-full border rounded-lg p-2"
+                  />
+                </div>
+              </div>
+            </div>
+            <div class="mt-6 flex justify-end">
+              <button
+                type="submit"
+                class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200"
+              >
+                حفظ الإعدادات
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- نافذة معاينة السند -->
+      <div
+        x-show="isPreview"
+        x-cloak
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      >
+        <div
+          class="bg-white rounded-lg shadow-lg max-w-3xl w-full relative max-h-[90vh] overflow-y-auto"
+        >
+          <button
+            @click="isPreview = false"
+            class="absolute top-2 left-2 text-gray-600 hover:text-red-600 p-2"
+          >
+            ✖
+          </button>
+          <div class="p-6 voucher-print" id="preview-voucher">
+            <div class="receipt-header text-center mb-6">
+              <h2
+                class="text-xl font-bold"
+                x-text="previewVoucher.type === 'قبض' ? 'سند قبض' : 'سند صرف'"
+              ></h2>
+              <div
+                x-text="'رقم السند: ' + previewVoucher.voucherNumber"
+                class="text-sm"
+              ></div>
+              <div
+                x-text="'التاريخ: ' + formatDate(previewVoucher.date)"
+                class="text-sm"
+              ></div>
+            </div>
+            <div class="mb-6">
+              <div class="field-row">
+                <div
+                  class="field-label"
+                  x-text="previewVoucher.type === 'قبض' ? 'استلمنا من السيد/ة:' : 'صرفنا للسيد/ة:'"
+                ></div>
+                <div x-text="previewVoucher.entity"></div>
+              </div>
+              <div class="field-row">
+                <div class="field-label">مبلغ وقدره:</div>
+                <div x-text="formatCurrency(previewVoucher.amount)"></div>
+              </div>
+              <div class="field-row">
+                <div class="field-label">المبلغ كتابةً:</div>
+                <div x-text="previewVoucher.amountInWords"></div>
+              </div>
+              <div class="field-row">
+                <div class="field-label">وذلك عن:</div>
+                <div x-text="previewVoucher.description"></div>
+              </div>
+              <div class="field-row">
+                <div class="field-label">طريقة الدفع:</div>
+                <div x-text="previewVoucher.paymentMethod"></div>
+              </div>
+              <template x-if="previewVoucher.paymentMethod === 'شيك'">
+                <div>
+                  <div class="field-row">
+                    <div class="field-label">رقم الشيك:</div>
+                    <div x-text="previewVoucher.checkNumber"></div>
+                  </div>
+                  <div class="field-row">
+                    <div class="field-label">البنك:</div>
+                    <div x-text="previewVoucher.bank"></div>
+                  </div>
+                  <div class="field-row">
+                    <div class="field-label">تاريخ الشيك:</div>
+                    <div x-text="formatDate(previewVoucher.checkDate)"></div>
+                  </div>
+                </div>
+              </template>
+              <template x-if="previewVoucher.paymentMethod === 'تحويل بنكي'">
+                <div>
+                  <div class="field-row">
+                    <div class="field-label">رقم التحويل:</div>
+                    <div x-text="previewVoucher.transferNumber"></div>
+                  </div>
+                  <div class="field-row">
+                    <div class="field-label">البنك:</div>
+                    <div x-text="previewVoucher.bank"></div>
+                  </div>
+                </div>
+              </template>
+            </div>
+            <div class="signature-area">
+              <div class="signature-box">
+                <div class="signature-line"></div>
+                <div>المستلم</div>
+              </div>
+              <div class="signature-box">
+                <div class="signature-line"></div>
+                <div>المحاسب</div>
+              </div>
+              <div class="signature-box">
+                <div class="signature-line"></div>
+                <div>المدير</div>
+              </div>
+            </div>
+          </div>
+          <div
+            class="p-4 border-t flex justify-end space-x-4 rtl:space-x-reverse"
+          >
+            <button
+              @click="isPreview = false"
+              class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition duration-200"
+            >
+              إغلاق
+            </button>
+            <button
+              @click="printPreview()"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200"
+            >
+              طباعة
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
     <script src="script.js"></script>
-</body>
+  </body>
 </html>
