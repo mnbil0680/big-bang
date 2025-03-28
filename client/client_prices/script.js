@@ -197,6 +197,13 @@ function updateTotals() {
   document.getElementById("final-total").textContent =
     finalTotal.toLocaleString("ar-SA");
 }
+function formatPrice(input) {
+  let value = input.value.replace(/[^\d.]/g, '');
+  if (value) {
+      value = parseFloat(value).toLocaleString('ar-SA');
+      input.value = value;
+  }
+}
 function addNewRow() {
   const tableBody = document.getElementById("products-table-body");
   const templateRow = document.getElementById("new-row-template");
@@ -228,6 +235,14 @@ function addNewRow() {
   newRow
     .querySelector(".tax-input")
     .addEventListener("input", () => updateRowTotal(newRow));
+
+    newRow.querySelector('.price-input').addEventListener('blur', function() {
+      formatPrice(this);
+      updateRowTotal(this);
+  });
+  newRow.querySelector('.qty-input').value = '1';
+    newRow.querySelector('.price-input').value = '0';
+    newRow.querySelector('.tax-input').value = document.getElementById('vat-percentage').textContent;
 
   // Append the new row to the table body
   tableBody.appendChild(newRow);
@@ -330,79 +345,100 @@ function updateWatermark(text) {
 // Export to PDF with Arabic support
 async function exportToPDF() {
   const printControls = document.querySelector(".print-controls");
-  printControls.style.display = "none";
   const container = document.querySelector(".container");
-
+  
   try {
-    // Use html2canvas to render the HTML content as an image
-    const canvas = await html2canvas(container, {
-      scale: 2, // Increase resolution for better quality
-      useCORS: true, // Allow cross-origin images (e.g., logos)
-      backgroundColor: "#ffffff", // Ensure white background
-    });
+      // Hide controls and show loading indicator
+      printControls.style.display = "none";
+      document.body.style.cursor = 'wait';
+      
+      // Optimize canvas rendering
+      const canvas = await html2canvas(container, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: "#ffffff",
+          logging: false, // Disable logging for better performance
+          allowTaint: false,
+          imageTimeout: 15000, // 15 seconds timeout for images
+          removeContainer: true, // Clean up temporary elements
+          letterRendering: true, // Better text quality
+      });
 
-    const imgData = canvas.toDataURL("image/jpeg", 1.0); // Convert canvas to JPEG
-    const imgWidth = canvas.width;
-    const imgHeight = canvas.height;
+      // Initialize jsPDF with optimal settings
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4',
+          compress: true, // Enable compression
+          precision: 16 // Higher precision for better text positioning
+      });
 
-    // Initialize jsPDF
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({
-      orientation: "portrait",
-      unit: "mm",
-      format: "a4",
-    });
+      // Configure PDF settings
+      pdf.addFont("Amiri-Regular.ttf", "Amiri", "normal");
+      pdf.setFont("Amiri");
+      pdf.setLanguage("ar");
+      pdf.setR2L(true);
 
-    // Add the Amiri font to jsPDF
-    pdf.addFont("Amiri-Regular.ttf", "Amiri", "normal");
-    pdf.setFont("Amiri");
+      // Calculate dimensions with better precision
+      const pageWidth = 210;
+      const pageHeight = 297;
+      const margin = 10;
+      const contentWidth = pageWidth - (2 * margin);
+      const contentHeight = (canvas.height * contentWidth) / canvas.width;
+      
+      // Convert canvas to high-quality JPEG
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
 
-    // Set RTL direction
-    pdf.setLanguage("ar"); // Set language to Arabic
-    pdf.setR2L(true); // Enable right-to-left text direction
+      // Calculate number of pages needed
+      const totalPages = Math.ceil(contentHeight / (pageHeight - (2 * margin)));
 
-    // Calculate dimensions to fit the image on an A4 page (210mm x 297mm)
-    const pageWidth = 210; // A4 width in mm
-    const pageHeight = 297; // A4 height in mm
-    const margin = 10; // Margin in mm
-    const pdfWidth = pageWidth - 2 * margin;
-    const pdfHeight = (imgHeight * pdfWidth) / imgWidth; // Maintain aspect ratio
+      // Add pages with content
+      for (let i = 0; i < totalPages; i++) {
+          if (i > 0) pdf.addPage();
 
-    let heightLeft = pdfHeight;
-    let position = 0;
+          const position = -i * (pageHeight - (2 * margin));
+          
+          pdf.addImage(
+              imgData,
+              'JPEG',
+              margin,
+              position + margin,
+              contentWidth,
+              contentHeight,
+              undefined,
+              'FAST' // Use fast image processing
+          );
 
-    // Add the image to the PDF, splitting across pages if necessary
-    pdf.addImage(
-      imgData,
-      "JPEG",
-      margin,
-      position + margin,
-      pdfWidth,
-      pdfHeight
-    );
+          // Add page number if multiple pages
+          if (totalPages > 1) {
+              pdf.setFontSize(8);
+              pdf.text(
+                  `${i + 1} / ${totalPages}`,
+                  pageWidth / 2,
+                  pageHeight - 5,
+                  { align: 'center' }
+              );
+          }
+      }
 
-    heightLeft -= pageHeight - 2 * margin;
-    while (heightLeft > 0) {
-      pdf.addPage();
-      position = heightLeft - pdfHeight;
-      pdf.addImage(
-        imgData,
-        "JPEG",
-        margin,
-        position + margin,
-        pdfWidth,
-        pdfHeight
-      );
-      heightLeft -= pageHeight - 2 * margin;
-    }
+      // Generate unique filename with timestamp
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const filename = `عرض_سعر_${timestamp}.pdf`;
 
-    // Save the PDF
-    pdf.save("عرض_سعر.pdf");
+      // Save PDF with optimized settings
+      pdf.save(filename, { returnPromise: true });
+
+      // Show success message
+      showSuccess('تم تصدير PDF بنجاح!');
+
   } catch (error) {
-    console.error("Error exporting to PDF:", error);
-    showError(`حدث خطأ أثناء تصدير PDF: ${error.message}`);
+      console.error("PDF Export Error:", error);
+      showError(`فشل تصدير PDF: ${error.message}`);
   } finally {
-    printControls.style.display = "flex";
+      // Restore UI state
+      printControls.style.display = "flex";
+      document.body.style.cursor = 'default';
   }
 }
 
