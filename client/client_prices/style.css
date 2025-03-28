@@ -542,6 +542,22 @@ input:focus {
   .toast-container {
     display: none;
   }
+  .container {
+    margin: 0;
+    padding: 10mm;
+    width: 190mm;
+}
+
+input, [contenteditable="true"] {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+.watermark {
+    display: block !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
 }
 .toast-success {
   background-color: #4caf50;
