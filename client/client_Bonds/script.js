@@ -4,7 +4,8 @@ function voucherSystem() {
     activeTab: "new",
     isPreview: false,
     newVoucher: {
-      type: "صرف",
+      // Default type changed to "قبض" to represent receipts.
+      type: "قبض",
       voucherNumber: "",
       date: new Date().toISOString().split("T")[0],
       entity: "",
@@ -27,8 +28,8 @@ function voucherSystem() {
       phone: "966555555555+",
       email: "info@example.com",
       currency: "ريال",
-      receiptPrefix: "REC-",
-      paymentPrefix: "PAY-",
+      receiptPrefix: "REC-", // Prefix used for receipts (قبض)
+      paymentPrefix: "PAY-", // Prefix used for payments (صرف)
       receiverSignature: "",
       accountantSignature: "",
     },
@@ -51,7 +52,7 @@ function voucherSystem() {
       this.generateNewVoucherNumber();
       this.applyFilters();
 
-      // تحديث الرسوم البيانية عند تغيير التبويب
+      // Update charts when active tab changes
       this.$watch("activeTab", (value) => {
         if (value === "reports") {
           this.$nextTick(() => {
@@ -62,10 +63,8 @@ function voucherSystem() {
     },
 
     showMessage(message, type = "danger") {
-      // Base classes for a fixed alert positioned at the top center
       const baseClass =
         "fixed top-4 left-1/2 transform -translate-x-1/2 z-50 p-4 rounded shadow-lg";
-      // Tailwind classes for error or success messages
       const typeClass =
         type === "danger" ? "bg-red-500 text-white" : "bg-green-500 text-white";
 
@@ -73,17 +72,14 @@ function voucherSystem() {
       alertDiv.className = `${baseClass} ${typeClass}`;
       alertDiv.textContent = message;
 
-      // Append alert to the body
       document.body.appendChild(alertDiv);
 
-      // Animate the alert sliding down into view using GSAP
       gsap.fromTo(
         alertDiv,
         { y: -50, opacity: 0 },
         { y: 0, opacity: 1, duration: 0.5, ease: "power2.out" }
       );
 
-      // Remove the alert after 3 seconds with a fade-out animation
       setTimeout(() => {
         gsap.to(alertDiv, {
           opacity: 0,
@@ -94,7 +90,7 @@ function voucherSystem() {
       }, 3000);
     },
 
-    // تحميل البيانات من الخادم
+    // Load data from the server
     async loadData() {
       try {
         // Load settings
@@ -125,7 +121,7 @@ function voucherSystem() {
       }
     },
 
-    // حفظ السند
+    // Save a voucher
     async saveVoucher() {
       try {
         const response = await fetch(API + "/vouchers", {
@@ -152,7 +148,7 @@ function voucherSystem() {
       }
     },
 
-    // حذف سند
+    // Delete a voucher
     async deleteVoucher(voucher) {
       if (!confirm("هل أنت متأكد من حذف هذا السند؟")) return;
       try {
@@ -165,7 +161,6 @@ function voucherSystem() {
           throw new Error(errorData.message || "فشل في حذف السند");
         }
 
-        // Remove the deleted voucher from the vouchers array
         this.vouchers = this.vouchers.filter((v) => v._id !== voucher._id);
         this.applyFilters();
         this.showMessage("تم حذف السند بنجاح", "success");
@@ -175,7 +170,7 @@ function voucherSystem() {
       }
     },
 
-    // حفظ الإعدادات
+    // Save settings
     async saveSettings() {
       try {
         const response = await fetch(API + "/settings", {
@@ -198,11 +193,11 @@ function voucherSystem() {
       }
     },
 
-    // توليد رقم سند جديد
+    // Generate new voucher number based on voucher type
     generateNewVoucherNumber() {
-      // If the voucher type is "صرف" (receipt), use the receipt prefix; otherwise (i.e. "قبض"), use the payment prefix.
+      // If the voucher type is "قبض" (receipt), use the receipt prefix; otherwise (i.e. "صرف"), use the payment prefix.
       const prefix =
-        this.newVoucher.type === "صرف"
+        this.newVoucher.type === "قبض"
           ? this.settings.receiptPrefix
           : this.settings.paymentPrefix;
 
@@ -220,10 +215,10 @@ function voucherSystem() {
         .padStart(3, "0")}`;
     },
 
-    // إعادة تعيين نموذج إدخال السند
+    // Reset the voucher form
     resetForm() {
       this.newVoucher = {
-        type: "صرف",
+        type: "قبض", // Reset to "قبض" (Receipt)
         voucherNumber: "",
         date: new Date().toISOString().split("T")[0],
         entity: "",
@@ -239,26 +234,25 @@ function voucherSystem() {
       this.generateNewVoucherNumber();
     },
 
-    // معاينة السند
+    // Preview voucher
     previewVoucher() {
       this.previewVoucher = { ...this.newVoucher };
       this.isPreview = true;
     },
 
-    // عرض سند محدد
+    // View a specific voucher
     viewVoucher(voucher) {
-      // Deep clone the voucher to avoid mutating the original object
       this.previewVoucher = JSON.parse(JSON.stringify(voucher));
       this.isPreview = true;
     },
 
-    // طباعة سند محدد
+    // Print a voucher
     printVoucher(voucher) {
       this.previewVoucher = { ...voucher };
       this.printPreview();
     },
 
-    // طباعة نافذة المعاينة
+    // Print the preview window
     printPreview() {
       const previewElem = document.getElementById("preview-voucher");
       if (!previewElem) {
@@ -266,10 +260,8 @@ function voucherSystem() {
         return;
       }
 
-      // Get the preview content
       const printContent = previewElem.innerHTML;
 
-      // Build a full HTML document for printing
       const printHTML = `
         <html dir="rtl">
           <head>
@@ -314,7 +306,6 @@ function voucherSystem() {
         </html>
       `;
 
-      // Open a new window for printing
       const printWindow = window.open("", "", "height=600,width=800");
       if (printWindow) {
         printWindow.document.write(printHTML);
@@ -327,18 +318,15 @@ function voucherSystem() {
       }
     },
 
-    // طباعة القائمة الحالية
+    // Print the current voucher list
     printCurrentList() {
-      // Check if a table exists before proceeding
       const tableElem = document.querySelector("table");
       if (!tableElem) {
         this.showMessage("لا يوجد جدول للطباعة", "danger");
         return;
       }
-      // Clone the table for printing
       const table = tableElem.cloneNode(true);
 
-      // Remove action buttons column (assumed to be the last cell in every row)
       const rows = table.querySelectorAll("tr");
       rows.forEach((row) => {
         const lastCell = row.lastElementChild;
@@ -347,7 +335,6 @@ function voucherSystem() {
         }
       });
 
-      // Build the print content as a complete HTML document
       const printContent = `
         <html dir="rtl">
           <head>
@@ -393,7 +380,6 @@ function voucherSystem() {
         </html>
       `;
 
-      // Open a new window for printing so the original page stays intact
       const printWindow = window.open("", "", "height=600,width=800");
       if (printWindow) {
         printWindow.document.write(printContent);
@@ -406,11 +392,11 @@ function voucherSystem() {
       }
     },
 
-    // تصدير البيانات إلى Excel
+    // Export data to Excel
     exportToExcel() {
-      // تحضير البيانات للتصدير
       const data = this.filteredVouchers.map((v) => ({
-        النوع: v.type === "صرف" ? "سند قبض" : "سند صرف", // adjust labels as desired
+        // Map voucher type to the appropriate label
+        النوع: v.type === "قبض" ? "سند قبض" : "سند صرف",
         "رقم السند": v.voucherNumber,
         التاريخ: v.date,
         "المستفيد/المورد": v.entity,
@@ -419,35 +405,27 @@ function voucherSystem() {
         "طريقة الدفع": v.paymentMethod,
       }));
 
-      // إنشاء ورقة عمل
       const worksheet = XLSX.utils.json_to_sheet(data);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "السندات");
-
-      // تصدير الملف
       const fileName = `سندات_${new Date().toISOString().split("T")[0]}.xlsx`;
       XLSX.writeFile(workbook, fileName);
     },
 
-    // تطبيق الفلاتر
+    // Apply filters to the vouchers list
     applyFilters() {
       let filtered = [...this.vouchers];
       console.log(this.filters);
-      // فلترة حسب نوع السند
       if (this.filters.type) {
         filtered = filtered.filter((v) => v.type === this.filters.type);
       }
-
-      // فلترة حسب التاريخ
       if (this.filters.fromDate) {
         filtered = filtered.filter((v) => v.date >= this.filters.fromDate);
       }
-
       if (this.filters.toDate) {
         filtered = filtered.filter((v) => v.date <= this.filters.toDate);
       }
       console.log(filtered);
-      // فلترة حسب كلمة البحث
       if (this.filters.searchTerm) {
         const term = this.filters.searchTerm.toLowerCase();
         filtered = filtered.filter(
@@ -457,14 +435,11 @@ function voucherSystem() {
             v.description.toLowerCase().includes(term)
         );
       }
-
-      // ترتيب السندات حسب التاريخ (الأحدث أولاً)
       filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
-
       this.filteredVouchers = filtered;
     },
 
-    // مسح الفلاتر
+    // Clear all filters
     clearFilters() {
       this.filters = {
         type: "",
@@ -472,11 +447,10 @@ function voucherSystem() {
         toDate: "",
         searchTerm: "",
       };
-
       this.applyFilters();
     },
 
-    // إنشاء الرسوم البيانية
+    // Generate all charts
     generateCharts() {
       this.createVoucherTypeChart();
       this.createMonthlyChart();
@@ -484,7 +458,7 @@ function voucherSystem() {
       this.createBalanceChart();
     },
 
-    // إنشاء رسم بياني لتوزيع السندات حسب النوع
+    // Create a pie chart for voucher types
     createVoucherTypeChart() {
       const receiptTotal = this.receiptVouchers.reduce(
         (sum, v) => sum + parseFloat(v.amount),
@@ -494,13 +468,10 @@ function voucherSystem() {
         (sum, v) => sum + parseFloat(v.amount),
         0
       );
-
       const ctx = document.getElementById("voucherTypeChart").getContext("2d");
-
       if (this.charts.voucherTypeChart) {
         this.charts.voucherTypeChart.destroy();
       }
-
       this.charts.voucherTypeChart = new Chart(ctx, {
         type: "pie",
         data: {
@@ -529,11 +500,9 @@ function voucherSystem() {
       });
     },
 
-    // إنشاء رسم بياني للحركة الشهرية
+    // Create a bar chart for monthly activity
     createMonthlyChart() {
-      // تجميع البيانات حسب الشهر
       const monthlySummary = {};
-
       this.vouchers.forEach((voucher) => {
         const yearMonth = voucher.date.substring(0, 7); // YYYY-MM
         if (!monthlySummary[yearMonth]) {
@@ -542,20 +511,15 @@ function voucherSystem() {
             payments: 0,
           };
         }
-
-        if (voucher.type === "صرف") {
+        if (voucher.type === "قبض") {
           monthlySummary[yearMonth].receipts += parseFloat(voucher.amount);
-        } else {
+        } else if (voucher.type === "صرف") {
           monthlySummary[yearMonth].payments += parseFloat(voucher.amount);
         }
       });
-
-      // تحويل البيانات إلى صيغة مناسبة للرسم البياني
       const months = Object.keys(monthlySummary).sort();
       const receiptData = months.map((month) => monthlySummary[month].receipts);
       const paymentData = months.map((month) => monthlySummary[month].payments);
-
-      // تنسيق أسماء الأشهر للعرض
       const labels = months.map((month) => {
         const date = new Date(month + "-01");
         return date.toLocaleDateString("ar-SA", {
@@ -563,13 +527,10 @@ function voucherSystem() {
           year: "numeric",
         });
       });
-
       const ctx = document.getElementById("monthlyChart").getContext("2d");
-
       if (this.charts.monthlyChart) {
         this.charts.monthlyChart.destroy();
       }
-
       this.charts.monthlyChart = new Chart(ctx, {
         type: "bar",
         data: {
@@ -606,24 +567,18 @@ function voucherSystem() {
       });
     },
 
-    // إنشاء رسم بياني لتوزيع السندات حسب طريقة الدفع
+    // Create a doughnut chart for payment methods
     createPaymentMethodChart() {
-      // تجميع البيانات حسب طريقة الدفع
       const methodSummary = {};
-
       this.vouchers.forEach((voucher) => {
         const method = voucher.paymentMethod || "غير محدد";
         if (!methodSummary[method]) {
           methodSummary[method] = 0;
         }
-
         methodSummary[method] += parseFloat(voucher.amount);
       });
-
       const methods = Object.keys(methodSummary);
       const data = methods.map((method) => methodSummary[method]);
-
-      // تعريف ألوان مخصصة
       const backgroundColor = [
         "rgba(54, 162, 235, 0.6)",
         "rgba(75, 192, 192, 0.6)",
@@ -631,19 +586,15 @@ function voucherSystem() {
         "rgba(153, 102, 255, 0.6)",
         "rgba(255, 159, 64, 0.6)",
       ];
-
       const borderColor = backgroundColor.map((color) =>
         color.replace("0.6", "1")
       );
-
       const ctx = document
         .getElementById("paymentMethodChart")
         .getContext("2d");
-
       if (this.charts.paymentMethodChart) {
         this.charts.paymentMethodChart.destroy();
       }
-
       this.charts.paymentMethodChart = new Chart(ctx, {
         type: "doughnut",
         data: {
@@ -669,43 +620,33 @@ function voucherSystem() {
       });
     },
 
-    // إنشاء رسم بياني للرصيد التراكمي
+    // Create a line chart for cumulative balance
     createBalanceChart() {
-      // ترتيب السندات حسب التاريخ
       const sortedVouchers = [...this.vouchers].sort(
         (a, b) => new Date(a.date) - new Date(b.date)
       );
-
-      // حساب الرصيد التراكمي
       let balance = 0;
       const balanceData = [];
       const dates = [];
-
       sortedVouchers.forEach((voucher) => {
-        if (voucher.type === "صرف") {
+        if (voucher.type === "قبض") {
           balance += parseFloat(voucher.amount);
-        } else {
+        } else if (voucher.type === "صرف") {
           balance -= parseFloat(voucher.amount);
         }
-
         balanceData.push(balance);
         dates.push(voucher.date);
       });
-
-      // تنسيق التواريخ للعرض
-      const labels = dates.map((date) => {
-        return new Date(date).toLocaleDateString("ar-SA", {
+      const labels = dates.map((date) =>
+        new Date(date).toLocaleDateString("ar-SA", {
           month: "short",
           day: "numeric",
-        });
-      });
-
+        })
+      );
       const ctx = document.getElementById("balanceChart").getContext("2d");
-
       if (this.charts.balanceChart) {
         this.charts.balanceChart.destroy();
       }
-
       this.charts.balanceChart = new Chart(ctx, {
         type: "line",
         data: {
@@ -734,17 +675,18 @@ function voucherSystem() {
       });
     },
 
+    // Getters for vouchers based on type
     get receiptVouchers() {
-      // Receipt vouchers are those with type "صرف"
-      return this.vouchers.filter((v) => v.type === "صرف");
-    },
-
-    get paymentVouchers() {
-      // Payment vouchers are those with type "قبض"
+      // Receipts are now vouchers with type "قبض"
       return this.vouchers.filter((v) => v.type === "قبض");
     },
 
-    // حساب إجمالي سندات القبض
+    get paymentVouchers() {
+      // Payments are now vouchers with type "صرف"
+      return this.vouchers.filter((v) => v.type === "صرف");
+    },
+
+    // Total receipts amount
     get totalReceipts() {
       return this.receiptVouchers.reduce(
         (sum, v) => sum + parseFloat(v.amount),
@@ -752,7 +694,7 @@ function voucherSystem() {
       );
     },
 
-    // حساب إجمالي سندات الصرف
+    // Total payments amount
     get totalPayments() {
       return this.paymentVouchers.reduce(
         (sum, v) => sum + parseFloat(v.amount),
@@ -760,12 +702,12 @@ function voucherSystem() {
       );
     },
 
-    // حساب صافي الرصيد
+    // Net balance calculation
     get netBalance() {
       return this.totalReceipts - this.totalPayments;
     },
 
-    // حساب إجمالي السندات المفلترة
+    // Total of filtered vouchers
     get filteredTotal() {
       return this.filteredVouchers.reduce((sum, v) => {
         const amount = parseFloat(v.amount);
@@ -773,35 +715,33 @@ function voucherSystem() {
       }, 0);
     },
 
-    // حساب إجمالي السندات للشهر الحالي
+    // Total amount for the current month
     get currentMonthTotal() {
       const now = new Date();
       const yearMonth = `${now.getFullYear()}-${(now.getMonth() + 1)
         .toString()
         .padStart(2, "0")}`;
-
       return this.vouchers
         .filter((v) => v.date.startsWith(yearMonth))
         .reduce((sum, v) => sum + parseFloat(v.amount), 0);
     },
 
-    // حساب عدد السندات للشهر الحالي
+    // Count of vouchers for the current month
     get currentMonthCount() {
       const now = new Date();
       const yearMonth = `${now.getFullYear()}-${(now.getMonth() + 1)
         .toString()
         .padStart(2, "0")}`;
-
       return this.vouchers.filter((v) => v.date.startsWith(yearMonth)).length;
     },
 
-    // تنسيق التاريخ
+    // Format a date string
     formatDate(dateStr) {
       if (!dateStr) return "";
       return new Date(dateStr).toLocaleDateString("ar-SA");
     },
 
-    // تنسيق المبلغ مع العملة
+    // Format amount with currency
     formatCurrency(amount) {
       if (!amount) return "0 " + this.settings.currency;
       return (
