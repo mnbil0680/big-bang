@@ -31,44 +31,6 @@
     <link rel="preconnect" href="https://cdn.jsdelivr.net" />
     <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
     <style>
-      .modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.8);
-        display: none;
-        z-index: 999;
-      }
-      .modal-container {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%) scale(0.8);
-        z-index: 1000;
-        background: white;
-        border-radius: 8px;
-        padding: 20px;
-        box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
-        display: none;
-        opacity: 0;
-      }
-      .login-header {
-        background-color: #0d6efd;
-        color: #fff;
-        padding: 1rem;
-        border-top-left-radius: 8px;
-        border-top-right-radius: 8px;
-        text-align: center;
-      }
-      .login-body {
-        padding: 1rem;
-      }
-      .login-footer {
-        text-align: right;
-        padding: 0.5rem 1rem 1rem;
-      }
       .sidebar {
         transition: transform 0.3s ease;
       }
@@ -88,114 +50,6 @@
     </style>
   </head>
   <body>
-    <!-- Modal Overlay -->
-    <div class="modal-overlay"></div>
-    <!-- Login Modal -->
-    <div
-      id="loginDialog"
-      class="modal-container"
-      role="dialog"
-      aria-labelledby="loginHeader"
-      aria-hidden="true"
-    >
-      <div class="login-header" id="loginHeader">
-        <h4>تسجيل الدخول</h4>
-      </div>
-      <div class="login-body">
-        <form id="loginForm" class="needs-validation" novalidate>
-          <div class="mb-3">
-            <label for="username" class="form-label">اسم المستخدم</label>
-            <input
-              type="text"
-              class="form-control"
-              id="username"
-              name="username"
-              required
-            />
-            <div class="invalid-feedback">يرجى إدخال اسم المستخدم</div>
-          </div>
-          <div class="mb-3">
-            <label for="password" class="form-label">كلمة المرور</label>
-            <input
-              type="password"
-              class="form-control"
-              id="password"
-              name="password"
-              required
-            />
-            <div class="invalid-feedback">يرجى إدخال كلمة المرور</div>
-          </div>
-        </form>
-      </div>
-      <div class="login-footer">
-        <button type="submit" form="loginForm" class="btn btn-success">
-          دخول
-        </button>
-        <button type="button" id="closeLoginBtn" class="btn btn-secondary">
-          إلغاء
-        </button>
-      </div>
-    </div>
-    <!-- Signup Modal -->
-    <div
-      id="signupDialog"
-      class="modal-container"
-      role="dialog"
-      aria-labelledby="signupHeader"
-      aria-hidden="true"
-    >
-      <div class="login-header" id="signupHeader">
-        <h4>إنشاء حساب</h4>
-      </div>
-      <div class="login-body">
-        <form id="signupForm" class="needs-validation" novalidate>
-          <div class="mb-3">
-            <label for="signupUsername" class="form-label">اسم المستخدم</label>
-            <input
-              type="text"
-              class="form-control"
-              id="signupUsername"
-              name="username"
-              required
-            />
-            <div class="invalid-feedback">يرجى إدخال اسم المستخدم</div>
-          </div>
-          <div class="mb-3">
-            <label for="signupEmail" class="form-label"
-              >البريد الإلكتروني</label
-            >
-            <input
-              type="email"
-              class="form-control"
-              id="signupEmail"
-              name="email"
-              required
-            />
-            <div class="invalid-feedback">يرجى إدخال بريد إلكتروني صحيح</div>
-          </div>
-          <div class="mb-3">
-            <label for="signupPassword" class="form-label">كلمة المرور</label>
-            <input
-              type="password"
-              class="form-control"
-              id="signupPassword"
-              name="password"
-              required
-            />
-            <div class="invalid-feedback">يرجى إدخال كلمة المرور</div>
-          </div>
-        </form>
-      </div>
-      <div class="login-footer">
-        <button type="submit" form="signupForm" class="btn btn-success">
-          تسجيل
-        </button>
-        <button type="button" id="closeSignupBtn" class="btn btn-secondary">
-          إلغاء
-        </button>
-      </div>
-    </div>
-
     <!-- تقسيم الصفحة -->
     <div class="layout-container">
       <!-- الشريط الجانبي -->
@@ -330,87 +184,43 @@
               نظام إدارة الصيانة والتركيب
             </div>
             <div class="ms-auto d-flex align-items-center">
-              <!-- Logged in menu (initially hidden) -->
-              <div
-                id="userMenu"
-                class="d-flex align-items-center"
-                style="display: none"
-              >
-                <!-- Search Input -->
-                <div class="nav-item me-3">
-                  <input
-                    type="text"
-                    class="form-control"
-                    placeholder="بحث..."
-                    style="width: 200px"
-                  />
-                </div>
-                <!-- Notifications Dropdown -->
-                <div class="nav-item dropdown me-3">
-                  <a
-                    class="nav-link dropdown-toggle"
-                    href="#"
-                    id="notificationsDropdown"
-                    role="button"
-                    data-bs-toggle="dropdown"
-                    aria-expanded="false"
-                  >
-                    <i class="bi bi-bell"></i>
-                  </a>
-                  <ul
-                    class="dropdown-menu dropdown-menu-end notifications-dropdown"
-                    aria-labelledby="notificationsDropdown"
-                  >
-                    <li><h6 class="dropdown-header">الإشعارات</h6></li>
-                    <li><hr class="dropdown-divider" /></li>
-                    <div class="notifications-list">
-                      <!-- Notifications filled by JavaScript -->
-                    </div>
-                    <li><hr class="dropdown-divider" /></li>
-                    <li>
-                      <a class="dropdown-item text-center" href="#"
-                        >عرض كل الإشعارات</a
-                      >
-                    </li>
-                  </ul>
-                </div>
-                <!-- Profile Dropdown -->
-                <div class="nav-item dropdown">
-                  <a
-                    class="nav-link dropdown-toggle"
-                    href="#"
-                    id="profileDropdown"
-                    role="button"
-                    data-bs-toggle="dropdown"
-                    aria-expanded="false"
-                  >
-                    <i class="bi bi-person-circle"></i> حسابي
-                  </a>
-                  <ul
-                    class="dropdown-menu dropdown-menu-end"
-                    aria-labelledby="profileDropdown"
-                  >
-                    <li>
-                      <a class="dropdown-item" href="#"> الملف الشخصي </a>
-                    </li>
-                    <li><a class="dropdown-item" href="#"> الإعدادات </a></li>
-                    <li><hr class="dropdown-divider" /></li>
-                    <li>
-                      <a class="dropdown-item" href="#" id="logoutBtn"
-                        >تسجيل الخروج</a
-                      >
-                    </li>
-                  </ul>
-                </div>
+              <!-- Search Input -->
+              <div class="nav-item me-3">
+                <input
+                  type="text"
+                  class="form-control"
+                  placeholder="بحث..."
+                  style="width: 200px"
+                />
               </div>
-              <!-- Authentication Buttons (shown when not logged in) -->
-              <div id="authButtons">
-                <button class="btn btn-primary me-2" id="loginBtn">
-                  <i class="bi bi-box-arrow-in-right"></i> تسجيل الدخول
-                </button>
-                <button class="btn btn-outline-primary" id="signupBtn">
-                  <i class="bi bi-person-plus"></i> إنشاء حساب
-                </button>
+              <!-- Notifications Dropdown -->
+              <div class="nav-item dropdown me-3">
+                <a
+                  class="nav-link dropdown-toggle"
+                  href="#"
+                  id="notificationsDropdown"
+                  role="button"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                >
+                  <i class="bi bi-bell"></i>
+                </a>
+                <ul
+                  class="dropdown-menu dropdown-menu-end notifications-dropdown"
+                  aria-labelledby="notificationsDropdown"
+                >
+                  <li><h6 class="dropdown-header">الإشعارات</h6></li>
+                  <li><hr class="dropdown-divider" /></li>
+                  <div class="notifications-list">
+                    <!-- Notifications filled by JavaScript -->
+                  </div>
+                  <li><hr class="dropdown-divider" /></li>
+                  <li>
+                    <a class="dropdown-item text-center" href="#"
+                      >عرض كل الإشعارات</a
+                    >
+                  </li>
+                </ul>
               </div>
             </div>
           </div>
@@ -1200,7 +1010,6 @@
       </div>
     </div>
 
-    <!-- Bootstrap Modals (unchanged for brevity; assumed functional as-is) -->
     <!-- Add Task Modal -->
     <div
       class="modal fade"
@@ -1298,8 +1107,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Other modals (quickSearchModal, viewInstallationRequestModal, etc.) remain unchanged for brevity -->
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

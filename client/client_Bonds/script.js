@@ -64,7 +64,7 @@ function voucherSystem() {
 
     showMessage(message, type = "danger") {
       const baseClass =
-        "fixed top-4 left-1/2 transform -translate-x-1/2 z-50 p-4 rounded shadow-lg";
+        "fixed top-4 left-0 transform right-0 z-50 p-4 rounded shadow-lg mx-auto max-w-md";
       const typeClass =
         type === "danger" ? "bg-red-500 text-white" : "bg-green-500 text-white";
 
