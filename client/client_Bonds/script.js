@@ -61,6 +61,39 @@ function voucherSystem() {
       });
     },
 
+    showMessage(message, type = "danger") {
+      // Base classes for a fixed alert positioned at the top center
+      const baseClass =
+        "fixed top-4 left-1/2 transform -translate-x-1/2 z-50 p-4 rounded shadow-lg";
+      // Tailwind classes for error or success messages
+      const typeClass =
+        type === "danger" ? "bg-red-500 text-white" : "bg-green-500 text-white";
+
+      const alertDiv = document.createElement("div");
+      alertDiv.className = `${baseClass} ${typeClass}`;
+      alertDiv.textContent = message;
+
+      // Append alert to the body
+      document.body.appendChild(alertDiv);
+
+      // Animate the alert sliding down into view using GSAP
+      gsap.fromTo(
+        alertDiv,
+        { y: -50, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.5, ease: "power2.out" }
+      );
+
+      // Remove the alert after 3 seconds with a fade-out animation
+      setTimeout(() => {
+        gsap.to(alertDiv, {
+          opacity: 0,
+          duration: 0.5,
+          ease: "power2.in",
+          onComplete: () => alertDiv.remove(),
+        });
+      }, 3000);
+    },
+
     // تحميل البيانات من الخادم
     async loadData() {
       try {
@@ -83,21 +116,18 @@ function voucherSystem() {
         this.vouchers = vouchers;
         this.filteredVouchers = [...vouchers];
         this.applyFilters();
-        console.log(vouchers);
       } catch (error) {
         console.error("Error loading data:", error);
-        alert("حدث خطأ أثناء تحميل البيانات. يرجى التحقق من اتصال الخادم.");
+        this.showMessage(
+          "حدث خطأ أثناء تحميل البيانات. يرجى التحقق من اتصال الخادم.",
+          "danger"
+        );
       }
     },
 
     // حفظ السند
     async saveVoucher() {
       try {
-        if (this.newVoucher.type === "receipt") {
-          this.newVoucher.type = "قبض";
-        } else {
-          this.newVoucher.type = "صرف";
-        }
         const response = await fetch(API + "/vouchers", {
           method: "POST",
           headers: {
@@ -115,32 +145,33 @@ function voucherSystem() {
         this.applyFilters();
         this.resetForm();
         this.activeTab = "list";
-        alert("تم حفظ السند بنجاح");
+        this.showMessage("تم حفظ السند بنجاح", "success");
       } catch (error) {
         console.error("Error saving voucher:", error);
-        alert("حدث خطأ أثناء حفظ السند");
+        this.showMessage("حدث خطأ أثناء حفظ السند", "danger");
       }
     },
 
     // حذف سند
     async deleteVoucher(voucher) {
       if (!confirm("هل أنت متأكد من حذف هذا السند؟")) return;
-
       try {
-        const response = await fetch(API + `/vouchers/${voucher._id}`, {
+        const response = await fetch(`${API}/vouchers/${voucher._id}`, {
           method: "DELETE",
         });
 
         if (!response.ok) {
-          throw new Error("Failed to delete voucher");
+          const errorData = await response.json();
+          throw new Error(errorData.message || "فشل في حذف السند");
         }
 
+        // Remove the deleted voucher from the vouchers array
         this.vouchers = this.vouchers.filter((v) => v._id !== voucher._id);
         this.applyFilters();
-        alert("تم حذف السند بنجاح");
+        this.showMessage("تم حذف السند بنجاح", "success");
       } catch (error) {
         console.error("Error deleting voucher:", error);
-        alert("حدث خطأ أثناء حذف السند");
+        this.showMessage("حدث خطأ أثناء حذف السند: " + error.message, "danger");
       }
     },
 
@@ -160,17 +191,18 @@ function voucherSystem() {
         }
 
         await response.json();
-        alert("تم حفظ الإعدادات بنجاح");
+        this.showMessage("تم حفظ الإعدادات بنجاح", "success");
       } catch (error) {
         console.error("Error saving settings:", error);
-        alert("حدث خطأ أثناء حفظ الإعدادات");
+        this.showMessage("حدث خطأ أثناء حفظ الإعدادات", "danger");
       }
     },
 
     // توليد رقم سند جديد
     generateNewVoucherNumber() {
+      // If the voucher type is "صرف" (receipt), use the receipt prefix; otherwise (i.e. "قبض"), use the payment prefix.
       const prefix =
-        this.newVoucher.type === "receipt"
+        this.newVoucher.type === "صرف"
           ? this.settings.receiptPrefix
           : this.settings.paymentPrefix;
 
@@ -191,7 +223,7 @@ function voucherSystem() {
     // إعادة تعيين نموذج إدخال السند
     resetForm() {
       this.newVoucher = {
-        type: "receipt",
+        type: "صرف",
         voucherNumber: "",
         date: new Date().toISOString().split("T")[0],
         entity: "",
@@ -219,6 +251,7 @@ function voucherSystem() {
       this.previewVoucher = JSON.parse(JSON.stringify(voucher));
       this.isPreview = true;
     },
+
     // طباعة سند محدد
     printVoucher(voucher) {
       this.previewVoucher = { ...voucher };
@@ -229,7 +262,7 @@ function voucherSystem() {
     printPreview() {
       const previewElem = document.getElementById("preview-voucher");
       if (!previewElem) {
-        alert("لا يوجد محتوى للمعاينة للطباعة");
+        this.showMessage("لا يوجد محتوى للمعاينة للطباعة", "danger");
         return;
       }
 
@@ -290,7 +323,7 @@ function voucherSystem() {
         printWindow.print();
         printWindow.close();
       } else {
-        alert("تعذر فتح نافذة الطباعة.");
+        this.showMessage("تعذر فتح نافذة الطباعة.", "danger");
       }
     },
 
@@ -299,7 +332,7 @@ function voucherSystem() {
       // Check if a table exists before proceeding
       const tableElem = document.querySelector("table");
       if (!tableElem) {
-        alert("لا يوجد جدول للطباعة");
+        this.showMessage("لا يوجد جدول للطباعة", "danger");
         return;
       }
       // Clone the table for printing
@@ -369,7 +402,7 @@ function voucherSystem() {
         printWindow.print();
         printWindow.close();
       } else {
-        alert("تعذر فتح نافذة الطباعة.");
+        this.showMessage("تعذر فتح نافذة الطباعة.", "danger");
       }
     },
 
@@ -377,7 +410,7 @@ function voucherSystem() {
     exportToExcel() {
       // تحضير البيانات للتصدير
       const data = this.filteredVouchers.map((v) => ({
-        النوع: v.type === "receipt" ? "قبض" : "صرف",
+        النوع: v.type === "صرف" ? "سند قبض" : "سند صرف", // adjust labels as desired
         "رقم السند": v.voucherNumber,
         التاريخ: v.date,
         "المستفيد/المورد": v.entity,
@@ -394,15 +427,6 @@ function voucherSystem() {
       // تصدير الملف
       const fileName = `سندات_${new Date().toISOString().split("T")[0]}.xlsx`;
       XLSX.writeFile(workbook, fileName);
-    },
-
-    // حذف سند
-    deleteVoucher(voucher) {
-      if (!confirm("هل أنت متأكد من حذف هذا السند؟")) return;
-
-      this.vouchers = this.vouchers.filter((v) => v.id !== voucher.id);
-      localStorage.setItem("vouchers", JSON.stringify(this.vouchers));
-      this.applyFilters();
     },
 
     // تطبيق الفلاتر
@@ -450,12 +474,6 @@ function voucherSystem() {
       };
 
       this.applyFilters();
-    },
-
-    // حفظ الإعدادات
-    saveSettings() {
-      localStorage.setItem("voucherSettings", JSON.stringify(this.settings));
-      alert("تم حفظ الإعدادات بنجاح");
     },
 
     // إنشاء الرسوم البيانية
@@ -525,7 +543,7 @@ function voucherSystem() {
           };
         }
 
-        if (voucher.type === "receipt") {
+        if (voucher.type === "صرف") {
           monthlySummary[yearMonth].receipts += parseFloat(voucher.amount);
         } else {
           monthlySummary[yearMonth].payments += parseFloat(voucher.amount);
@@ -664,7 +682,7 @@ function voucherSystem() {
       const dates = [];
 
       sortedVouchers.forEach((voucher) => {
-        if (voucher.type === "receipt") {
+        if (voucher.type === "صرف") {
           balance += parseFloat(voucher.amount);
         } else {
           balance -= parseFloat(voucher.amount);
@@ -716,14 +734,14 @@ function voucherSystem() {
       });
     },
 
-    // الحصول على سندات القبض
     get receiptVouchers() {
-      return this.vouchers.filter((v) => v.type === "receipt");
+      // Receipt vouchers are those with type "صرف"
+      return this.vouchers.filter((v) => v.type === "صرف");
     },
 
-    // الحصول على سندات الصرف
     get paymentVouchers() {
-      return this.vouchers.filter((v) => v.type === "payment");
+      // Payment vouchers are those with type "قبض"
+      return this.vouchers.filter((v) => v.type === "قبض");
     },
 
     // حساب إجمالي سندات القبض
