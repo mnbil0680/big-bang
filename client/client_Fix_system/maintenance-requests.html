@@ -9,23 +9,19 @@
     />
     <meta name="author" content="شركة الخبراء للصيانة والتركيبات" />
     <title>نظام إدارة الصيانة والتركيب - طلبات الصيانة</title>
-    <!-- Favicon (assuming it exists) -->
     <link
       rel="shortcut icon"
       href="assets/img/favicon.ico"
       type="image/x-icon"
     />
-    <!-- Bootstrap RTL CSS -->
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css"
     />
-    <!-- Bootstrap Icons -->
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
     />
-    <!-- Custom CSS -->
     <link rel="stylesheet" href="assets/css/styles.css" />
     <style>
       .modal-overlay {
@@ -91,221 +87,13 @@
     </style>
   </head>
   <body>
-    <!-- Modal Overlay -->
     <div class="modal-overlay"></div>
-
-    <!-- Layout Container -->
     <div class="layout-container">
       <!-- الشريط الجانبي -->
-      <aside class="sidebar">
-        <div
-          class="sidebar-header d-flex justify-content-between align-items-center"
-        >
-          <a
-            href="index.html"
-            class="text-decoration-none company-name-container"
-          >
-            <h1 class="sidebar-logo company-name">نظام إدارة الصيانة</h1>
-          </a>
-          <button
-            class="btn btn-sm btn-icon toggle-sidebar"
-            id="toggleSidebar"
-            aria-label="تصغير القائمة"
-          >
-            <i class="bi bi-list"></i>
-          </button>
-        </div>
-        <div class="sidebar-content">
-          <ul class="sidebar-nav">
-            <li class="sidebar-item">
-              <a href="index.html" class="sidebar-link">
-                <i class="bi bi-speedometer2"></i>
-                <span class="sidebar-text">لوحة التحكم</span>
-              </a>
-            </li>
-            <li class="sidebar-item active">
-              <a href="maintenance-requests.html" class="sidebar-link">
-                <i class="bi bi-tools"></i>
-                <span class="sidebar-text">طلبات الصيانة</span>
-              </a>
-            </li>
-            <li class="sidebar-item">
-              <a href="installation-requests.html" class="sidebar-link">
-                <i class="bi bi-building-gear"></i>
-                <span class="sidebar-text">طلبات التركيب</span>
-              </a>
-            </li>
-            <li class="sidebar-item">
-              <a href="technicians.html" class="sidebar-link">
-                <i class="bi bi-person-gear"></i>
-                <span class="sidebar-text">الفنيين</span>
-              </a>
-            </li>
-            <li class="sidebar-item">
-              <a href="customers.html" class="sidebar-link">
-                <i class="bi bi-people"></i>
-                <span class="sidebar-text">العملاء</span>
-              </a>
-            </li>
-            <li class="sidebar-item">
-              <a href="inventory.html" class="sidebar-link">
-                <i class="bi bi-box-seam"></i>
-                <span class="sidebar-text">المخزون</span>
-              </a>
-            </li>
-            <li class="sidebar-item">
-              <a href="invoices.html" class="sidebar-link">
-                <i class="bi bi-receipt"></i>
-                <span class="sidebar-text">الفواتير</span>
-              </a>
-            </li>
-            <li class="sidebar-item">
-              <a href="reports.html" class="sidebar-link">
-                <i class="bi bi-bar-chart"></i>
-                <span class="sidebar-text">التقارير</span>
-              </a>
-            </li>
-            <li class="sidebar-item mt-4">
-              <a
-                href="#"
-                class="sidebar-link"
-                data-bs-toggle="modal"
-                data-bs-target="#helpModal"
-              >
-                <i class="bi bi-question-circle"></i>
-                <span class="sidebar-text">المساعدة</span>
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div class="sidebar-footer">
-          <div class="d-flex justify-content-center">
-            <span class="text-muted small">الإصدار 1.0.0</span>
-          </div>
-        </div>
-      </aside>
-
-      <script>
-        document.addEventListener("DOMContentLoaded", function () {
-          let sidebar = document.querySelector(".sidebar");
-          let toggleButton = document.getElementById("toggleSidebar");
-          let icon = toggleButton.querySelector("i");
-
-          // Retrieve saved state from localStorage
-          if (localStorage.getItem("sidebarCollapsed") === "true") {
-            sidebar.classList.add("collapsed");
-            icon.classList.remove("bi-list");
-            icon.classList.add("bi-x");
-          }
-
-          // Toggle sidebar and save state to localStorage
-          toggleButton.addEventListener("click", function () {
-            sidebar.classList.toggle("collapsed");
-            let isCollapsed = sidebar.classList.contains("collapsed");
-
-            localStorage.setItem("sidebarCollapsed", isCollapsed);
-
-            if (isCollapsed) {
-              icon.classList.remove("bi-list");
-              icon.classList.add("bi-x");
-            } else {
-              icon.classList.remove("bi-x");
-              icon.classList.add("bi-list");
-            }
-          });
-        });
-      </script>
-
-      <!-- Main Content -->
+      <script src="assets/js/asideInclud.js"></script>
       <div class="main-content">
-        <!-- Top Navigation Bar -->
-        <nav class="navbar navbar-expand navbar-light bg-white">
-          <div class="container-fluid">
-            <button class="btn btn-icon toggle-sidebar d-md-none me-2">
-              <i class="bi bi-list"></i>
-            </button>
-            <div class="d-none d-sm-block fw-bold company-name">
-              نظام إدارة الصيانة والتركيب
-            </div>
-            <div class="ms-auto d-flex align-items-center">
-              <div
-                id="userMenu"
-                class="d-flex align-items-center"
-                style="display: none"
-              >
-                <div class="nav-item me-3">
-                  <input
-                    type="text"
-                    class="form-control"
-                    placeholder="بحث..."
-                    style="width: 200px"
-                  />
-                </div>
-                <div class="nav-item dropdown me-3">
-                  <a
-                    class="nav-link dropdown-toggle"
-                    href="#"
-                    id="notificationsDropdown"
-                    role="button"
-                    data-bs-toggle="dropdown"
-                    aria-expanded="false"
-                  >
-                    <i class="bi bi-bell"></i>
-                  </a>
-                  <ul
-                    class="dropdown-menu dropdown-menu-end notifications-dropdown"
-                    aria-labelledby="notificationsDropdown"
-                  >
-                    <li><h6 class="dropdown-header">الإشعارات</h6></li>
-                    <li><hr class="dropdown-divider" /></li>
-                    <div class="notifications-list"></div>
-                    <li><hr class="dropdown-divider" /></li>
-                    <li>
-                      <a class="dropdown-item text-center" href="#"
-                        >عرض كل الإشعارات</a
-                      >
-                    </li>
-                  </ul>
-                </div>
-                <div class="nav-item dropdown">
-                  <a
-                    class="nav-link dropdown-toggle"
-                    href="#"
-                    id="profileDropdown"
-                    role="button"
-                    data-bs-toggle="dropdown"
-                    aria-expanded="false"
-                  >
-                    <i class="bi bi-person-circle"></i> حسابي
-                  </a>
-                  <ul
-                    class="dropdown-menu dropdown-menu-end"
-                    aria-labelledby="profileDropdown"
-                  >
-                    <li><a class="dropdown-item" href="#">الملف الشخصي</a></li>
-                    <li><a class="dropdown-item" href="#">الإعدادات</a></li>
-                    <li><hr class="dropdown-divider" /></li>
-                    <li>
-                      <a class="dropdown-item" href="#" id="logoutBtn"
-                        >تسجيل الخروج</a
-                      >
-                    </li>
-                  </ul>
-                </div>
-              </div>
-              <div id="authButtons">
-                <button class="btn btn-primary me-2" id="loginBtn">
-                  <i class="bi bi-box-arrow-in-right"></i> تسجيل الدخول
-                </button>
-                <button class="btn btn-outline-primary" id="signupBtn">
-                  <i class="bi bi-person-plus"></i> إنشاء حساب
-                </button>
-              </div>
-            </div>
-          </div>
-        </nav>
-
-        <!-- Main Section -->
+        <div id="navbar"></div>
+        <script src="assets/js/navbarInclude.js"></script>
         <main class="content">
           <div class="container-fluid p-3">
             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -320,7 +108,6 @@
               </button>
             </div>
 
-            <!-- Filter Bar -->
             <div class="card mb-4">
               <div class="card-body">
                 <div class="row g-3">
@@ -371,7 +158,6 @@
               </div>
             </div>
 
-            <!-- Maintenance Requests Card -->
             <div class="card">
               <div
                 class="card-header d-flex justify-content-between align-items-center"
@@ -428,7 +214,6 @@
                       </tr>
                     </thead>
                     <tbody id="requestsTableBody">
-                      <!-- Sample Data -->
                       <tr>
                         <td>#MR001</td>
                         <td>أحمد محمد</td>
@@ -506,7 +291,6 @@
                     </tbody>
                   </table>
                 </div>
-                <!-- Pagination -->
                 <nav aria-label="Pagination" class="mt-3">
                   <ul class="pagination justify-content-center">
                     <li class="page-item disabled">
@@ -533,7 +317,6 @@
       </div>
     </div>
 
-    <!-- Add Maintenance Request Modal -->
     <div
       class="modal fade"
       id="addMaintenanceRequestModal"
@@ -627,9 +410,43 @@
       </div>
     </div>
 
-    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.1/gsap.min.js"></script>
     <script src="./assets/js/Maintenance.js" type="module"></script>
+    <script>
+      (function () {
+        function c() {
+          var b = a.contentDocument || a.contentWindow.document;
+          if (b) {
+            var d = b.createElement("script");
+            d.innerHTML =
+              "window.__CF$cv$params={r:'9275c3667e65bd0a',t:'MTc0MzE1MDYwMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
+            b.getElementsByTagName("head")[0].appendChild(d);
+          }
+        }
+        if (document.body) {
+          var a = document.createElement("iframe");
+          a.height = 1;
+          a.width = 1;
+          a.style.position = "absolute";
+          a.style.top = 0;
+          a.style.left = 0;
+          a.style.border = "none";
+          a.style.visibility = "hidden";
+          document.body.appendChild(a);
+          if ("loading" !== document.readyState) c();
+          else if (window.addEventListener)
+            document.addEventListener("DOMContentLoaded", c);
+          else {
+            var e = document.onreadystatechange || function () {};
+            document.onreadystatechange = function (b) {
+              e(b);
+              "loading" !== document.readyState &&
+                ((document.onreadystatechange = e), c());
+            };
+          }
+        }
+      })();
+    </script>
   </body>
 </html>
