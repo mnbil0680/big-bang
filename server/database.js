@@ -320,10 +320,8 @@ class Database {
       Customer.findByIdAndUpdate(customer["_id"], customer, { new: true })
         .then((data) => {
           if (!data) {
-            console.log(`Customer not found: ${customer["_id"]}`);
             reject(`Customer not found: ${customer["_id"]}`);
           }
-          console.log("Customer updated successfully:", data);
           resolve(data);
         })
         .catch((err) => {

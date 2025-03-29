@@ -213,82 +213,7 @@
                         <th>الإجراءات</th>
                       </tr>
                     </thead>
-                    <tbody id="requestsTableBody">
-                      <tr>
-                        <td>#MR001</td>
-                        <td>أحمد محمد</td>
-                        <td>مكيف سبليت</td>
-                        <td><span class="badge bg-danger">عالية</span></td>
-                        <td>
-                          <span class="badge bg-warning text-dark"
-                            >قيد المعالجة</span
-                          >
-                        </td>
-                        <td>2023-09-15</td>
-                        <td>خالد العتيبي</td>
-                        <td class="table-actions">
-                          <button
-                            class="btn btn-sm btn-info"
-                            data-bs-toggle="tooltip"
-                            title="عرض التفاصيل"
-                            onclick="viewRequest('#MR001')"
-                          >
-                            <i class="bi bi-eye"></i>
-                          </button>
-                          <button
-                            class="btn btn-sm btn-primary"
-                            data-bs-toggle="tooltip"
-                            title="تعديل"
-                            onclick="editRequest('#MR001')"
-                          >
-                            <i class="bi bi-pencil"></i>
-                          </button>
-                          <button
-                            class="btn btn-sm btn-danger"
-                            data-bs-toggle="tooltip"
-                            title="حذف"
-                            onclick="deleteRequest('#MR001')"
-                          >
-                            <i class="bi bi-trash"></i>
-                          </button>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>#MR002</td>
-                        <td>سعيد عبدالله</td>
-                        <td>ثلاجة</td>
-                        <td><span class="badge bg-warning">متوسطة</span></td>
-                        <td><span class="badge bg-success">مكتمل</span></td>
-                        <td>2023-09-16</td>
-                        <td>عمر سعيد</td>
-                        <td class="table-actions">
-                          <button
-                            class="btn btn-sm btn-info"
-                            data-bs-toggle="tooltip"
-                            title="عرض التفاصيل"
-                            onclick="viewRequest('#MR002')"
-                          >
-                            <i class="bi bi-eye"></i>
-                          </button>
-                          <button
-                            class="btn btn-sm btn-primary"
-                            data-bs-toggle="tooltip"
-                            title="تعديل"
-                            onclick="editRequest('#MR002')"
-                          >
-                            <i class="bi bi-pencil"></i>
-                          </button>
-                          <button
-                            class="btn btn-sm btn-danger"
-                            data-bs-toggle="tooltip"
-                            title="حذف"
-                            onclick="deleteRequest('#MR002')"
-                          >
-                            <i class="bi bi-trash"></i>
-                          </button>
-                        </td>
-                      </tr>
-                    </tbody>
+                    <tbody id="requestsTableBody"></tbody>
                   </table>
                 </div>
                 <nav aria-label="Pagination" class="mt-3">
@@ -340,17 +265,29 @@
           <div class="modal-body">
             <form id="addRequestForm" class="needs-validation" novalidate>
               <div class="mb-3">
-                <label for="customerName" class="form-label"
+                <label for="customerSearchInput" class="form-label"
                   >اسم العميل <span class="text-danger">*</span></label
                 >
+                <!-- Text input for searching customers -->
                 <input
                   type="text"
+                  id="customerSearchInput"
                   class="form-control"
-                  id="customerName"
+                  placeholder="ابحث عن العميل..."
+                  autocomplete="off"
                   required
                 />
-                <div class="invalid-feedback">يرجى إدخال اسم العميل</div>
+                <!-- Hidden input to store the selected customer id -->
+                <input type="hidden" id="customerId" />
+                <!-- Container for the dropdown list (will be shown/hidden dynamically) -->
+                <div
+                  id="customerDropdown"
+                  class="dropdown-menu"
+                  style="width: 100%; max-height: 200px; overflow-y: auto"
+                ></div>
+                <div class="invalid-feedback">يرجى اختيار العميل</div>
               </div>
+
               <div class="mb-3">
                 <label for="deviceType" class="form-label"
                   >نوع الجهاز <span class="text-danger">*</span></label
@@ -379,6 +316,7 @@
                 <label for="technician" class="form-label">الفني المسؤول</label>
                 <select class="form-select" id="technician">
                   <option value="">اختر...</option>
+                  <!-- Technician options will be loaded dynamically -->
                 </select>
               </div>
               <div class="mb-3">
