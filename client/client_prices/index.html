@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <title>عرض سعر احترافي</title>
     <!-- Include jsPDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -14,7 +15,18 @@
   </head>
   <body>
     <!-- Toast Notification Container -->
-    <div id="toast-container" class="toast-container"></div>
+    <div id="toast-container" class="toast-container">
+        <!-- Default success message (optional) -->
+        <div class="toast toast-success" style="display: none">
+            <span>تم بنجاح</span>
+            <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+        </div>
+        <!-- Default error message (optional) -->
+        <div class="toast toast-error" style="display: none">
+            <span>حدث خطأ</span>
+            <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+        </div>
+    </div>
 
     <div class="watermark">نسخة للعميل</div>
 
@@ -423,9 +435,14 @@
     </div>
 
     <!-- Add this in the head section -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+   
 
     <!-- Link to the external JavaScript file -->
-    <script src="script.js"></script>
+    <script src="script.js">
+      window.onerror = function(msg, url, lineNo, columnNo, error) {
+        showError(`Error: ${msg}`);
+        return false;
+    };
+    </script>
   </body>
 </html>

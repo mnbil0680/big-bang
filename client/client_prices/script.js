@@ -1,31 +1,104 @@
 const API_BASE_URL = "http://localhost:3000"; // Base URL for the backend server
-
+const { jsPDF } = window.jspdf; // This line would fail without the library
 // Display error messages as toast notifications
-function showError(message) {
-  const toastContainer = document.getElementById("toast-container");
+function showError(message, duration = 5000) {
+  const toastContainer = document.getElementById("toast-container") || createToastContainer();
+  
+  // Create and configure toast element
+  const toast = Object.assign(document.createElement("div"), {
+      className: "toast toast-error",
+      innerHTML: `
+          <span>${message?.replace(/\n/g, "<br>") || "حدث خطأ غير معروف"}</span>
+          <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+      `
+  });
 
-  const toast = document.createElement("div");
-  toast.className = "toast toast-error";
-  toast.innerHTML = `
-    <span>${message.replace(/\n/g, "<br>")}</span>
-    <button class="toast-close" onclick="this.parentElement.remove()">×</button>
-  `;
+  // Efficient DOM manipulation
+  requestAnimationFrame(() => {
+      toastContainer.appendChild(toast);
+      requestAnimationFrame(() => toast.classList.add("show"));
+  });
 
-  toastContainer.appendChild(toast);
+  // Cleanup using single timeout
+  const timeout = setTimeout(() => {
+      toast.classList.remove("show");
+      toast.addEventListener("transitionend", () => toast.remove(), { once: true });
+      clearTimeout(timeout);
+  }, duration);
+}
 
-  setTimeout(() => {
-    toast.classList.add("show");
-  }, 100);
+// Helper function to create toast container if it doesn't exist
+function createToastContainer() {
+  // Check if container already exists
+  const existingContainer = document.getElementById("toast-container");
+  if (existingContainer) return existingContainer;
 
-  setTimeout(() => {
-    toast.classList.remove("show");
-    setTimeout(() => toast.remove(), 300);
-  }, 5000);
+  // Create and configure container with enhanced attributes
+  const container = Object.assign(document.createElement("div"), {
+      id: "toast-container",
+      className: "toast-container",
+      role: "alert",
+      "aria-live": "polite",
+      "aria-atomic": "true"
+  });
+
+  // Set container styles for better positioning and stacking
+  Object.assign(container.style, {
+      position: "fixed",
+      top: "20px",
+      left: "50%",
+      transform: "translateX(-50%)",
+      zIndex: "9999",
+      maxHeight: "100vh",
+      overflowY: "auto",
+      pointerEvents: "none" // Allow clicking through container
+  });
+
+  // Add container to DOM safely
+  try {
+      document.body.appendChild(container);
+  } catch (error) {
+      console.error("Failed to create toast container:", error);
+      // Fallback to body if available, otherwise return null
+      return document.querySelector(".toast-container") || null;
+  }
+
+  // Enable pointer events only for toast messages
+  container.addEventListener('mouseover', () => {
+      container.style.pointerEvents = 'auto';
+  });
+  container.addEventListener('mouseleave', () => {
+      container.style.pointerEvents = 'none';
+  });
+
+  return container;
 }
 
 function clearError() {
+
   const toastContainer = document.getElementById("toast-container");
-  toastContainer.innerHTML = "";
+  if (!toastContainer) return;
+
+  // Get all toast elements
+  const toasts = toastContainer.querySelectorAll('.toast');
+  
+  // If no toasts, exit early
+  if (!toasts.length) return;
+
+  // Remove toasts with animation
+  toasts.forEach(toast => {
+      toast.classList.remove('show');
+      toast.addEventListener('transitionend', () => {
+          toast.remove();
+      }, { once: true });
+  });
+
+  // Clean up container after all animations
+  setTimeout(() => {
+      if (toastContainer.children.length === 0) {
+          toastContainer.innerHTML = '';
+      }
+  }, 300); // Match this with your CSS transition duration
 }
 
 // Load currencies from the database and populate the select element
