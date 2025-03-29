@@ -874,12 +874,10 @@ app.post("/maintenance", (req, res) => {
       res.status(201).send(data);
     })
     .catch((err) => {
-      res
-        .status(400)
-        .send({
-          error: "Failed to create maintenance request",
-          message: err.message,
-        });
+      res.status(400).send({
+        error: "Failed to create maintenance request",
+        message: err.message,
+      });
     });
 });
 
@@ -902,12 +900,10 @@ app.get("/maintenance", (req, res) => {
       res.send(data);
     })
     .catch((err) => {
-      res
-        .status(500)
-        .send({
-          error: "Failed to fetch maintenance requests",
-          message: err.message,
-        });
+      res.status(500).send({
+        error: "Failed to fetch maintenance requests",
+        message: err.message,
+      });
     });
 });
 
@@ -923,12 +919,10 @@ app.get("/maintenance/:id", (req, res) => {
       res.send(data);
     })
     .catch((err) => {
-      res
-        .status(500)
-        .send({
-          error: "Failed to fetch maintenance request",
-          message: err.message,
-        });
+      res.status(500).send({
+        error: "Failed to fetch maintenance request",
+        message: err.message,
+      });
     });
 });
 
@@ -945,12 +939,10 @@ app.put("/maintenance/:id", (req, res) => {
       res.send(data);
     })
     .catch((err) => {
-      res
-        .status(400)
-        .send({
-          error: "Failed to update maintenance request",
-          message: err.message,
-        });
+      res.status(400).send({
+        error: "Failed to update maintenance request",
+        message: err.message,
+      });
     });
 });
 
@@ -966,12 +958,10 @@ app.delete("/maintenance/:id", (req, res) => {
       res.send({ message: "Maintenance request deleted successfully" });
     })
     .catch((err) => {
-      res
-        .status(500)
-        .send({
-          error: "Failed to delete maintenance request",
-          message: err.message,
-        });
+      res.status(500).send({
+        error: "Failed to delete maintenance request",
+        message: err.message,
+      });
     });
 });
 
@@ -983,12 +973,10 @@ app.get("/maintenance/:status", (req, res) => {
       res.send(data);
     })
     .catch((err) => {
-      res
-        .status(400)
-        .send({
-          error: "Failed to fetch maintenance requests by status",
-          message: err.message,
-        });
+      res.status(400).send({
+        error: "Failed to fetch maintenance requests by status",
+        message: err.message,
+      });
     });
 });
 
@@ -999,12 +987,10 @@ app.get("/maintenance/:technicianId", (req, res) => {
       res.send(data);
     })
     .catch((err) => {
-      res
-        .status(400)
-        .send({
-          error: "Failed to fetch maintenance requests by technician",
-          message: err.message,
-        });
+      res.status(400).send({
+        error: "Failed to fetch maintenance requests by technician",
+        message: err.message,
+      });
     });
 });
 
@@ -1015,12 +1001,10 @@ app.get("/maintenance/:customerId", (req, res) => {
       res.send(data);
     })
     .catch((err) => {
-      res
-        .status(400)
-        .send({
-          error: "Failed to fetch maintenance requests by customer",
-          message: err.message,
-        });
+      res.status(400).send({
+        error: "Failed to fetch maintenance requests by customer",
+        message: err.message,
+      });
     });
 });
 

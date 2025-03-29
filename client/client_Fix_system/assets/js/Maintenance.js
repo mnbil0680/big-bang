@@ -1,5 +1,8 @@
 const API = "http://localhost:3000";
-
+fetch("http://localhost:3000/maintenance")
+  .then((response) => response.json())
+  .then((data) => console.log(data)) // Debugging
+  .catch((error) => console.error("Fetch error:", error));
 document.addEventListener("DOMContentLoaded", async () => {
   // Sidebar toggle
   document.querySelectorAll(".toggle-sidebar").forEach((btn) => {
@@ -9,6 +12,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   let requests = [];
+  Z;
 
   // Fetch maintenance requests from the API and render the table
   try {

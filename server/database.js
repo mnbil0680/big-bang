@@ -9,6 +9,7 @@ const Customer = require("./schema/Fix/customerSchema");
 const Inventory = require("./schema/Fix/inventorySchema");
 const Order = require("./schema/Fix/orderSchema");
 const Technician = require("./schema/Fix/technicianSchema");
+const MaintenanceRequest = require("./schema/Fix/maintenanceRequestSchema");
 
 // Price
 const Client = require("./schema/Price/clientSchema");

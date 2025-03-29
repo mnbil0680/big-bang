@@ -39,7 +39,6 @@
         display: none;
         opacity: 0;
       }
-
       .login-header {
         background-color: #0d6efd;
         color: #fff;
@@ -204,27 +203,34 @@
             ></button>
           </div>
           <div class="modal-body">
+            <!-- Technician Form (partial) -->
             <form id="addTechnicianForm" class="needs-validation" novalidate>
+              <!-- Auto-generated Employee ID -->
               <div class="mb-3">
-                <label for="techId" class="form-label">رقم الفني</label>
-                <input type="text" class="form-control" id="techId" required />
-                <div class="invalid-feedback">يرجى إدخال رقم الفني</div>
-              </div>
-              <div class="mb-3">
-                <label for="techName" class="form-label">اسم الفني</label>
+                <label for="employeeId" class="form-label">رقم الموظف</label>
                 <input
                   type="text"
                   class="form-control"
-                  id="techName"
+                  id="employeeId"
+                  readonly
                   required
                 />
+                <div class="invalid-feedback" id="employeeIdFeedback">
+                  رقم الموظف موجود بالفعل
+                </div>
+              </div>
+              <!-- Technician Name -->
+              <div class="mb-3">
+                <label for="name" class="form-label">اسم الفني</label>
+                <input type="text" class="form-control" id="name" required />
                 <div class="invalid-feedback">يرجى إدخال اسم الفني</div>
               </div>
+              <!-- Specialization Selector -->
               <div class="mb-3">
-                <label for="techSpecialization" class="form-label"
+                <label for="specializationSelect" class="form-label"
                   >التخصص</label
                 >
-                <select class="form-select" id="techSpecialization" required>
+                <select class="form-select" id="specializationSelect">
                   <option value="">اختر التخصص</option>
                   <option value="مكيفات">مكيفات</option>
                   <option value="أجهزة منزلية">أجهزة منزلية</option>
@@ -232,19 +238,199 @@
                   <option value="كهرباء">كهرباء</option>
                   <option value="أخرى">أخرى</option>
                 </select>
-                <div class="invalid-feedback">يرجى اختيار التخصص</div>
               </div>
+              <!-- Custom Specialization Input (hidden by default) -->
+              <div
+                class="mb-3"
+                id="customSpecializationContainer"
+                style="display: none"
+              >
+                <label for="customSpecialization" class="form-label"
+                  >تخصص مخصص</label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  id="customSpecialization"
+                  placeholder="أدخل تخصص مخصص"
+                />
+                <button
+                  type="button"
+                  class="btn btn-secondary mt-2"
+                  id="addCustomSpecializationBtn"
+                >
+                  أضف التخصص المخصص
+                </button>
+              </div>
+              <!-- Display Selected Specializations -->
               <div class="mb-3">
-                <label for="techPhone" class="form-label">رقم الهاتف</label>
+                <label class="form-label">التخصصات المختارة:</label>
+                <ul id="selectedSpecializationsList" class="list-group"></ul>
+              </div>
+              <!-- Phone Number with Placeholder and Updated Validation -->
+              <div class="mb-3">
+                <label for="phone" class="form-label">رقم الهاتف</label>
+                <input
+                  type="text"
+                  id="phone"
+                  class="form-control"
+                  maxlength="15"
+                  placeholder="+201234567890"
+                  pattern="^\+?[1-9]\d{0,2}[ ]?\d{8,13}$"
+                  title="Enter a valid phone number (e.g., +201234567890)"
+                  required
+                />
+                <div class="invalid-feedback" id="phoneFeedback">
+                  يرجى إدخال رقم هاتف صحيح بالتنسيق: +CountryCode Number
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  data-bs-dismiss="modal"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="submit"
+                  class="btn btn-primary"
+                  id="saveTechnicianBtn"
+                >
+                  حفظ
+                </button>
+              </div>
+            </form>
+            <script src="./assets/js/technicians.js"></script>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- View Technician Modal -->
+    <div
+      class="modal fade"
+      id="viewTechnicianModal"
+      tabindex="-1"
+      aria-labelledby="viewTechnicianModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="viewTechnicianModalLabel">
+              تفاصيل الفني
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="إغلاق"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <!-- Technician details will be inserted here -->
+            <p id="viewTechnicianDetails"></p>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              إغلاق
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Technician Modal -->
+    <div
+      class="modal fade"
+      id="editTechnicianModal"
+      tabindex="-1"
+      aria-labelledby="editTechnicianModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editTechnicianModalLabel">
+              تعديل بيانات الفني
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="إغلاق"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form id="editTechnicianForm" novalidate>
+              <input type="hidden" id="editTechId" />
+
+              <!-- Name Field -->
+              <div class="mb-3">
+                <label for="editName" class="form-label">اسم الفني</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="editName"
+                  required
+                  minlength="3"
+                />
+                <div class="invalid-feedback">
+                  يجب أن يكون الاسم 3 أحرف على الأقل.
+                </div>
+              </div>
+
+              <!-- Phone Field -->
+              <div class="mb-3">
+                <label for="editPhone" class="form-label">رقم الهاتف</label>
                 <input
                   type="tel"
                   class="form-control"
-                  id="techPhone"
-                  placeholder="966xxxxxxxxx"
+                  id="editPhone"
+                  placeholder="+966123456789"
                   required
+                  pattern="^\+?[1-9]\d{0,2}[ ]?\d{8,13}$"
                 />
-                <div class="invalid-feedback">يرجى إدخال رقم هاتف صحيح</div>
+                <div class="invalid-feedback">
+                  يرجى إدخال رقم هاتف صحيح مثل: +966123456789
+                </div>
               </div>
+
+              <!-- Status Field -->
+              <div class="mb-3">
+                <label for="editStatus" class="form-label">تعديل الحالة</label>
+                <select class="form-control" id="editStatus" required>
+                  <option value="" disabled selected>اختر الحالة</option>
+                  <option value="active">نشط</option>
+                  <option value="inactive">غير نشط</option>
+                </select>
+                <div class="invalid-feedback">يرجى اختيار الحالة.</div>
+              </div>
+
+              <!-- Specializations Selection -->
+              <div class="mb-3">
+                <label for="editSpecialization" class="form-label"
+                  >التخصصات</label
+                >
+                <select class="form-control" id="editSpecialization"></select>
+                <button
+                  type="button"
+                  class="btn btn-secondary mt-2"
+                  id="addSpecializationBtn"
+                >
+                  إضافة التخصص
+                </button>
+              </div>
+
+              <!-- Container for custom specialization input (will be added dynamically) -->
+              <div id="editCustomSpecializationContainer"></div>
+
+              <!-- Selected Specializations List -->
+              <ul id="selectedSpecializations" class="list-group mt-2"></ul>
             </form>
           </div>
           <div class="modal-footer">
@@ -253,14 +439,40 @@
               class="btn btn-secondary"
               data-bs-dismiss="modal"
             >
-              إلغاء
+              إغلاق
             </button>
+            <button type="button" class="btn btn-primary" id="saveEditTechBtn">
+              حفظ التعديلات
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">تأكيد الحذف</h5>
             <button
               type="button"
-              class="btn btn-primary"
-              id="saveTechnicianBtn"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">هل أنت متأكد من حذف هذا الفني؟</div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
             >
-              حفظ
+              إلغاء
+            </button>
+            <button type="button" class="btn btn-danger" id="confirmDelete">
+              حذف
             </button>
           </div>
         </div>
@@ -278,132 +490,41 @@
         new Date().getFullYear();
     </script>
     <!-- Custom JavaScript -->
-    <script src="assets/js/main.js"></script>
-    <!-- Login and Signup Dialog Script with API integration and GSAP Animation -->
-
+    <script src="assets/js/technicians.js"></script>
     <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        // Check if user is logged in by checking for a token
-        if (localStorage.getItem("jwt")) {
-          document.getElementById("userMenu").style.display = "flex";
-          document.getElementById("authButtons").style.display = "none";
-        } else {
-          document.getElementById("userMenu").style.display = "none";
-          document.getElementById("authButtons").style.display = "flex";
+      (function () {
+        function c() {
+          var b = a.contentDocument || a.contentWindow.document;
+          if (b) {
+            var d = b.createElement("script");
+            d.innerHTML =
+              "window.__CF$cv$params={r:'927ab951aceb257d',t:'MTc0MzIwMjYxOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
+            b.getElementsByTagName("head")[0].appendChild(d);
+          }
         }
-
-        // Logout functionality: remove token and refresh UI
-        const logoutBtn = document.getElementById("logoutBtn");
-        if (logoutBtn) {
-          logoutBtn.addEventListener("click", () => {
-            localStorage.removeItem("jwt");
-            location.reload();
-          });
+        if (document.body) {
+          var a = document.createElement("iframe");
+          a.height = 1;
+          a.width = 1;
+          a.style.position = "absolute";
+          a.style.top = 0;
+          a.style.left = 0;
+          a.style.border = "none";
+          a.style.visibility = "hidden";
+          document.body.appendChild(a);
+          if ("loading" !== document.readyState) c();
+          else if (window.addEventListener)
+            document.addEventListener("DOMContentLoaded", c);
+          else {
+            var e = document.onreadystatechange || function () {};
+            document.onreadystatechange = function (b) {
+              e(b);
+              "loading" !== document.readyState &&
+                ((document.onreadystatechange = e), c());
+            };
+          }
         }
-      });
-    </script>
-    <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        let activeModal = null; // store the id of the currently open modal
-
-        function showModal(id) {
-          const modal = document.getElementById(id);
-          activeModal = id;
-          modal.style.display = "block";
-          document.querySelector(".modal-overlay").style.display = "block";
-          gsap.fromTo(
-            modal,
-            { opacity: 0, scale: 0.8 },
-            { opacity: 1, scale: 1, duration: 0.3, ease: "power2.out" }
-          );
-        }
-        function closeModal(id) {
-          const modal = document.getElementById(id);
-          gsap.to(modal, {
-            opacity: 0,
-            scale: 0.8,
-            duration: 0.3,
-            ease: "power2.in",
-            onComplete: () => {
-              modal.style.display = "none";
-              document.querySelector(".modal-overlay").style.display = "none";
-              activeModal = null;
-            },
-          });
-        }
-
-        // When clicking the overlay, close the active modal if it exists.
-        document
-          .querySelector(".modal-overlay")
-          .addEventListener("click", (e) => {
-            if (activeModal) {
-              closeModal(activeModal);
-            }
-          });
-
-        document
-          .getElementById("loginBtn")
-          .addEventListener("click", () => showModal("loginDialog"));
-        document
-          .getElementById("closeLoginBtn")
-          .addEventListener("click", () => closeModal("loginDialog"));
-        document
-          .getElementById("signupBtn")
-          .addEventListener("click", () => showModal("signupDialog"));
-        document
-          .getElementById("closeSignupBtn")
-          .addEventListener("click", () => closeModal("signupDialog"));
-
-        // Login form submission
-        document
-          .getElementById("loginForm")
-          .addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const username = document.getElementById("username").value;
-            const password = document.getElementById("password").value;
-
-            try {
-              const response = await fetch("/auth/login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, password }),
-              });
-              if (!response.ok) throw new Error("Login failed");
-              const data = await response.json();
-              localStorage.setItem("jwt", data.token);
-              alert("تم تسجيل الدخول بنجاح");
-              closeModal("loginDialog");
-            } catch (error) {
-              console.error(error);
-              alert("فشل تسجيل الدخول، يرجى المحاولة مرة أخرى");
-            }
-          });
-
-        // Signup form submission
-        document
-          .getElementById("signupForm")
-          .addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const username = document.getElementById("signupUsername").value;
-            const email = document.getElementById("signupEmail").value;
-            const password = document.getElementById("signupPassword").value;
-
-            try {
-              const response = await fetch("/auth/signup", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, email, password }),
-              });
-              if (!response.ok) throw new Error("Signup failed");
-              const data = await response.json();
-              alert("تم إنشاء الحساب بنجاح، يرجى تسجيل الدخول");
-              closeModal("signupDialog");
-            } catch (error) {
-              console.error(error);
-              alert("فشل إنشاء الحساب، يرجى المحاولة مرة أخرى");
-            }
-          });
-      });
+      })();
     </script>
   </body>
 </html>
