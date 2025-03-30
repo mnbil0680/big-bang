@@ -1313,7 +1313,7 @@ class Database {
         reject("Maintenance request data is required");
         return;
       }
-
+      console.log("Adding maintenance request:", requestData);
       requestData.createdDate = new Date();
       requestData.updatedDate = new Date();
 
@@ -1337,7 +1337,6 @@ class Database {
         .populate("customerId")
         .populate("technicianId")
         .populate("partsUsed.partId")
-        .populate("notes.createdBy")
         .then((data) => {
           console.log(`Found ${data.length} maintenance requests`);
           resolve(data);
@@ -1360,7 +1359,6 @@ class Database {
         .populate("customerId")
         .populate("technicianId")
         .populate("partsUsed.partId")
-        .populate("notes.createdBy")
         .then((data) => {
           if (!data) {
             console.log(`Maintenance request not found: ${id}`);
@@ -1392,7 +1390,6 @@ class Database {
         .populate("customerId")
         .populate("technicianId")
         .populate("partsUsed.partId")
-        .populate("notes.createdBy")
         .then((data) => {
           if (!data) {
             console.log(`Maintenance request not found: ${request._id}`);
@@ -1439,7 +1436,6 @@ class Database {
         .populate("customerId")
         .populate("technicianId")
         .populate("partsUsed.partId")
-        .populate("notes.createdBy")
         .then((data) => {
           console.log(
             `Found ${data.length} maintenance requests with status: ${status}`
@@ -1459,7 +1455,6 @@ class Database {
         .populate("customerId")
         .populate("technicianId")
         .populate("partsUsed.partId")
-        .populate("notes.createdBy")
         .then((data) => {
           console.log(
             `Found ${data.length} maintenance requests for technician: ${technicianId}`
@@ -1482,7 +1477,6 @@ class Database {
         .populate("customerId")
         .populate("technicianId")
         .populate("partsUsed.partId")
-        .populate("notes.createdBy")
         .then((data) => {
           console.log(
             `Found ${data.length} maintenance requests for customer: ${customerId}`
