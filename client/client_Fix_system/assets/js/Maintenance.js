@@ -122,15 +122,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   let requests = [];
   // Fetch maintenance requests from the API and render the table
   try {
-    const res = await fetch(API + "/maintenance");
-    if (!res.ok) throw new Error("Failed to fetch maintenance requests");
+    const res = await fetch(API + "/orders");
+    if (!res.ok) throw new Error("Failed to fetch orders requests");
     requests = await res.json();
     renderTable(requests);
 
     // Setup export buttons after table is rendered
     setupExportButtons();
   } catch (error) {
-    console.error("Error fetching maintenance requests:", error);
+    console.error("Error fetching orders requests:", error);
   }
   console.log(requests);
 
@@ -183,129 +183,130 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
     tooltipTriggerList.map((el) => new bootstrap.Tooltip(el));
   }
-
   // --- Customer Search Setup ---
-  let customers = [];
-  try {
-    const response = await fetch(API + "/customers");
-    if (!response.ok) throw new Error("Failed to fetch customers");
-    customers = await response.json();
-  } catch (error) {
-    console.error("Error loading customers:", error);
-  }
-
-  const customerSearchInput = document.getElementById("customerSearchInput");
-  const customerDropdown = document.getElementById("customerDropdown");
-  const customerIdInput = document.getElementById("customerId");
-
-  function renderCustomerOptions(filtered) {
-    customerDropdown.innerHTML = "";
-    if (filtered.length === 0) {
-      const noOption = document.createElement("div");
-      noOption.className = "dropdown-item disabled";
-      noOption.textContent = "لا يوجد نتائج";
-      customerDropdown.appendChild(noOption);
-      return;
+  {
+    let customers = [];
+    try {
+      const response = await fetch(API + "/customers");
+      if (!response.ok) throw new Error("Failed to fetch customers");
+      customers = await response.json();
+    } catch (error) {
+      console.error("Error loading customers:", error);
     }
-    filtered.forEach((customer) => {
-      const option = document.createElement("div");
-      option.className = "dropdown-item";
-      option.textContent = customer.name;
-      option.dataset.customerId = customer._id;
-      option.addEventListener("click", () => {
-        customerSearchInput.value = customer.name;
-        customerIdInput.value = customer._id;
+
+    const customerSearchInput = document.getElementById("customerSearchInput");
+    const customerDropdown = document.getElementById("customerDropdown");
+    const customerIdInput = document.getElementById("customerId");
+
+    function renderCustomerOptions(filtered) {
+      customerDropdown.innerHTML = "";
+      if (filtered.length === 0) {
+        const noOption = document.createElement("div");
+        noOption.className = "dropdown-item disabled";
+        noOption.textContent = "لا يوجد نتائج";
+        customerDropdown.appendChild(noOption);
+        return;
+      }
+      filtered.forEach((customer) => {
+        const option = document.createElement("div");
+        option.className = "dropdown-item";
+        option.textContent = customer.name;
+        option.dataset.customerId = customer._id;
+        option.addEventListener("click", () => {
+          customerSearchInput.value = customer.name;
+          customerIdInput.value = customer._id;
+          customerDropdown.style.display = "none";
+        });
+        customerDropdown.appendChild(option);
+      });
+      customerDropdown.style.display = "block";
+    }
+
+    customerSearchInput.addEventListener("input", () => {
+      const searchTerm = customerSearchInput.value.trim().toLowerCase();
+      if (searchTerm === "") {
         customerDropdown.style.display = "none";
-      });
-      customerDropdown.appendChild(option);
+        return;
+      }
+      const filtered = customers.filter((customer) =>
+        customer.name.toLowerCase().includes(searchTerm)
+      );
+      renderCustomerOptions(filtered);
     });
-    customerDropdown.style.display = "block";
+
+    document.addEventListener("click", (e) => {
+      if (
+        !customerSearchInput.contains(e.target) &&
+        !customerDropdown.contains(e.target)
+      ) {
+        customerDropdown.style.display = "none";
+      }
+    });
   }
-
-  customerSearchInput.addEventListener("input", () => {
-    const searchTerm = customerSearchInput.value.trim().toLowerCase();
-    if (searchTerm === "") {
-      customerDropdown.style.display = "none";
-      return;
-    }
-    const filtered = customers.filter((customer) =>
-      customer.name.toLowerCase().includes(searchTerm)
-    );
-    renderCustomerOptions(filtered);
-  });
-
-  document.addEventListener("click", (e) => {
-    if (
-      !customerSearchInput.contains(e.target) &&
-      !customerDropdown.contains(e.target)
-    ) {
-      customerDropdown.style.display = "none";
-    }
-  });
   // --- End Customer Search Setup ---
-
   // --- Technician Search Setup ---
-  let technicians = [];
-  try {
-    const response = await fetch(API + "/technicians");
-    if (!response.ok) throw new Error("Failed to fetch technicians");
-    technicians = await response.json();
-  } catch (error) {
-    console.error("Error loading technicians:", error);
-  }
-
-  const technicianSearchInput = document.getElementById(
-    "technicianSearchInput"
-  );
-  const technicianDropdown = document.getElementById("technicianDropdown");
-  const technicianIdInput = document.getElementById("technicianId");
-
-  function renderTechnicianOptions(filtered) {
-    technicianDropdown.innerHTML = "";
-    if (filtered.length === 0) {
-      const noOption = document.createElement("div");
-      noOption.className = "dropdown-item disabled";
-      noOption.textContent = "لا يوجد نتائج";
-      technicianDropdown.appendChild(noOption);
-      return;
+  {
+    let technicians = [];
+    try {
+      const response = await fetch(API + "/technicians");
+      if (!response.ok) throw new Error("Failed to fetch technicians");
+      technicians = await response.json();
+    } catch (error) {
+      console.error("Error loading technicians:", error);
     }
-    filtered.forEach((technician) => {
-      const option = document.createElement("div");
-      option.className = "dropdown-item";
-      option.textContent = technician.name;
-      option.dataset.technicianId = technician._id;
-      option.addEventListener("click", () => {
-        technicianSearchInput.value = technician.name;
-        technicianIdInput.value = technician._id;
-        technicianDropdown.style.display = "none";
-      });
-      technicianDropdown.appendChild(option);
-    });
-    technicianDropdown.style.display = "block";
-  }
 
-  technicianSearchInput.addEventListener("input", () => {
-    const searchTerm = technicianSearchInput.value.trim().toLowerCase();
-    if (searchTerm === "") {
-      technicianDropdown.style.display = "none";
-      return;
-    }
-    const filtered = technicians.filter((technician) =>
-      technician.name.toLowerCase().includes(searchTerm)
+    const technicianSearchInput = document.getElementById(
+      "technicianSearchInput"
     );
-    renderTechnicianOptions(filtered);
-  });
+    const technicianDropdown = document.getElementById("technicianDropdown");
+    const technicianIdInput = document.getElementById("technicianId");
 
-  document.addEventListener("click", (e) => {
-    if (
-      !technicianSearchInput.contains(e.target) &&
-      !technicianDropdown.contains(e.target)
-    ) {
-      technicianDropdown.style.display = "none";
+    function renderTechnicianOptions(filtered) {
+      technicianDropdown.innerHTML = "";
+      if (filtered.length === 0) {
+        const noOption = document.createElement("div");
+        noOption.className = "dropdown-item disabled";
+        noOption.textContent = "لا يوجد نتائج";
+        technicianDropdown.appendChild(noOption);
+        return;
+      }
+      filtered.forEach((technician) => {
+        const option = document.createElement("div");
+        option.className = "dropdown-item";
+        option.textContent = technician.name;
+        option.dataset.technicianId = technician._id;
+        option.addEventListener("click", () => {
+          technicianSearchInput.value = technician.name;
+          technicianIdInput.value = technician._id;
+          technicianDropdown.style.display = "none";
+        });
+        technicianDropdown.appendChild(option);
+      });
+      technicianDropdown.style.display = "block";
     }
-  });
-  // --- End Technician Search Setup ---
 
+    technicianSearchInput.addEventListener("input", () => {
+      const searchTerm = technicianSearchInput.value.trim().toLowerCase();
+      if (searchTerm === "") {
+        technicianDropdown.style.display = "none";
+        return;
+      }
+      const filtered = technicians.filter((technician) =>
+        technician.name.toLowerCase().includes(searchTerm)
+      );
+      renderTechnicianOptions(filtered);
+    });
+
+    document.addEventListener("click", (e) => {
+      if (
+        !technicianSearchInput.contains(e.target) &&
+        !technicianDropdown.contains(e.target)
+      ) {
+        technicianDropdown.style.display = "none";
+      }
+    });
+  }
+  // --- End Technician Search Setup ---
   function isSameDay(date1, date2) {
     return (
       date1.getFullYear() === date2.getFullYear() &&
@@ -378,7 +379,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             document.getElementById("technicianId").value || "غير محدد",
         };
 
-        const res = await fetch(API + "/maintenance", {
+        const res = await fetch(API + "/orders", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(newRequest),
@@ -396,15 +397,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         form.reset();
         form.classList.remove("was-validated");
       } catch (error) {
-        console.error("Error adding maintenance request:", error);
+        console.error("Error adding orders request:", error);
       }
     });
 
   // --- Make action functions global ---
   window.viewRequest = async (id) => {
     try {
-      // Fetch the maintenance request with populated references
-      const res = await fetch(API + "/maintenance/" + id);
+      // Fetch the orders request with populated references
+      const res = await fetch(API + "/orders/" + id);
       if (!res.ok) throw new Error("فشل في جلب بيانات الطلب");
       const data = await res.json();
 
@@ -472,25 +473,25 @@ document.addEventListener("DOMContentLoaded", async () => {
       const modal = new bootstrap.Modal(modalEl);
       modal.show();
     } catch (error) {
-      console.error("Error fetching maintenance request:", error);
+      console.error("Error fetching orders request:", error);
       alert("حدث خطأ أثناء جلب تفاصيل الطلب: " + error.message);
     }
   };
 
   window.editRequest = async (id) => {
     try {
-      const res = await fetch(API + "/maintenance/" + id);
+      const res = await fetch(API + "/orders/" + id);
       if (!res.ok) throw new Error("Request not found");
       const data = await res.json();
       const newStatus = prompt("تحديث الحالة:", data.status);
       if (newStatus) {
         const updatedRequest = { ...data, status: newStatus };
-        const putRes = await fetch(API + "/maintenance/" + id, {
+        const putRes = await fetch(API + "/orders/" + id, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(updatedRequest),
         });
-        if (!putRes.ok) throw new Error("Failed to update maintenance request");
+        if (!putRes.ok) throw new Error("Failed to update orders request");
         const updatedData = await putRes.json();
         console.log("Maintenance request updated:", updatedData);
         const index = requests.findIndex((req) => req._id === id);
@@ -500,23 +501,23 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       }
     } catch (error) {
-      console.error("Error updating maintenance request:", error);
+      console.error("Error updating orders request:", error);
     }
   };
 
   window.deleteRequest = async (id) => {
     if (confirm("هل أنت متأكد من حذف هذا الطلب؟")) {
       try {
-        const res = await fetch(API + "/maintenance/" + id, {
+        const res = await fetch(API + "/orders/" + id, {
           method: "DELETE",
         });
-        if (!res.ok) throw new Error("Failed to delete maintenance request");
+        if (!res.ok) throw new Error("Failed to delete orders request");
         await res.json();
         requests = requests.filter((req) => req._id !== id);
         renderTable(requests);
         console.log(`Maintenance request ${id} deleted successfully`);
       } catch (error) {
-        console.error("Error deleting maintenance request:", error);
+        console.error("Error deleting orders request:", error);
       }
     }
   };

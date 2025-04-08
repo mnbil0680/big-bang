@@ -8,6 +8,25 @@ const orderSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    priority: {
+      type: String,
+      required: true,
+      enum: ["عالية", "متوسطة", "منخفضة"],
+    },
+    deviceType: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    estimatedCost: {
+      type: Number,
+      min: 0,
+    },
+    totalPrice: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
     customerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Customer",

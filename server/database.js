@@ -9,7 +9,6 @@ const Customer = require("./schema/Fix/customerSchema");
 const Inventory = require("./schema/Fix/inventorySchema");
 const Order = require("./schema/Fix/orderSchema");
 const Technician = require("./schema/Fix/technicianSchema");
-const MaintenanceRequest = require("./schema/Fix/maintenanceRequestSchema");
 
 // Price
 const Client = require("./schema/Price/clientSchema");
@@ -436,7 +435,6 @@ class Database {
         });
     });
   }
-
   createOrder(orderData) {
     return new Promise(async (resolve, reject) => {
       try {
@@ -445,9 +443,37 @@ class Database {
           return reject("Valid order data with items array is required");
         }
 
-        // Validate required fields
+        // Validate required fields from the original code
         if (!orderData.orderId || !orderData.customerId || !orderData.type) {
           return reject("orderId, customerId, and type are required fields");
+        }
+
+        // Validate new required fields
+        if (
+          !orderData.priority ||
+          !orderData.deviceType ||
+          orderData.totalPrice === undefined // totalPrice can be 0
+        ) {
+          return reject(
+            "priority, deviceType, and totalPrice are required fields"
+          );
+        }
+
+        // Validate the new field values
+        const allowedPriorities = ["عالية", "متوسطة", "منخفضة"];
+        if (!allowedPriorities.includes(orderData.priority)) {
+          return reject(
+            `priority must be one of: ${allowedPriorities.join(", ")}`
+          );
+        }
+        if (orderData.totalPrice < 0) {
+          return reject("totalPrice must be non-negative");
+        }
+        if (
+          orderData.estimatedCost !== undefined &&
+          orderData.estimatedCost < 0
+        ) {
+          return reject("estimatedCost must be non-negative if provided");
         }
 
         // Validate items array is not empty
@@ -457,7 +483,11 @@ class Database {
 
         // Validate items structure
         for (const item of orderData.items) {
-          if (!item.itemId || !item.quantity || !item.price) {
+          if (
+            !item.itemId ||
+            item.quantity === undefined ||
+            item.price === undefined
+          ) {
             return reject("Each item must have itemId, quantity, and price");
           }
           if (item.quantity <= 0 || item.price < 0) {
@@ -477,7 +507,7 @@ class Database {
           return reject(`Customer ${orderData.customerId} not found`);
         }
 
-        // Validate and check inventory
+        // Validate and check inventory for each item
         for (const item of orderData.items) {
           const inventory = await Inventory.findById(item.itemId);
           if (!inventory) {
@@ -494,7 +524,7 @@ class Database {
         const newOrder = new Order(orderData);
         const savedOrder = await newOrder.save();
 
-        // Update inventory quantities
+        // Update inventory quantities for each item
         for (const item of orderData.items) {
           await Inventory.findByIdAndUpdate(item.itemId, {
             $inc: { quantity: -item.quantity },
@@ -560,7 +590,8 @@ class Database {
         return;
       }
 
-      order["updatedDate"] = new Date();
+      // Update the updatedDate field
+      order.updatedDate = new Date();
 
       // First find the original order
       Order.findById(order._id)
@@ -1300,191 +1331,6 @@ class Database {
         })
         .catch((err) => {
           console.error("Error deleting show:", err);
-          reject(err);
-        });
-    });
-  }
-  //////////////////////////////////////////////
-  // Add these functions to your Database class
-
-  addMaintenanceRequest(requestData) {
-    return new Promise((resolve, reject) => {
-      if (!requestData) {
-        reject("Maintenance request data is required");
-        return;
-      }
-      console.log("Adding maintenance request:", requestData);
-      requestData.createdDate = new Date();
-      requestData.updatedDate = new Date();
-
-      const newRequest = new MaintenanceRequest(requestData);
-      newRequest
-        .save()
-        .then((data) => {
-          console.log("Maintenance request added successfully:", data);
-          resolve(data);
-        })
-        .catch((err) => {
-          console.error("Error adding maintenance request:", err);
-          reject(err);
-        });
-    });
-  }
-
-  getMaintenanceRequests() {
-    return new Promise((resolve, reject) => {
-      MaintenanceRequest.find()
-        .populate("customerId")
-        .populate("technicianId")
-        .populate("partsUsed.partId")
-        .then((data) => {
-          console.log(`Found ${data.length} maintenance requests`);
-          resolve(data);
-        })
-        .catch((err) => {
-          console.error("Error getting maintenance requests:", err);
-          reject(err);
-        });
-    });
-  }
-
-  getMaintenanceRequestById(id) {
-    return new Promise((resolve, reject) => {
-      if (!id) {
-        reject("Maintenance request ID is required");
-        return;
-      }
-
-      MaintenanceRequest.findById(id)
-        .populate("customerId")
-        .populate("technicianId")
-        .populate("partsUsed.partId")
-        .then((data) => {
-          if (!data) {
-            console.log(`Maintenance request not found: ${id}`);
-            reject(`Maintenance request not found: ${id}`);
-          }
-          console.log("Maintenance request retrieved successfully:", data);
-          resolve(data);
-        })
-        .catch((err) => {
-          console.error("Error getting maintenance request:", err);
-          reject(err);
-        });
-    });
-  }
-
-  updateMaintenanceRequest(request) {
-    return new Promise((resolve, reject) => {
-      if (!request || !request._id) {
-        reject("Maintenance request ID is required");
-        return;
-      }
-
-      request.updatedDate = new Date();
-
-      MaintenanceRequest.findByIdAndUpdate(request._id, request, {
-        new: true,
-        runValidators: true,
-      })
-        .populate("customerId")
-        .populate("technicianId")
-        .populate("partsUsed.partId")
-        .then((data) => {
-          if (!data) {
-            console.log(`Maintenance request not found: ${request._id}`);
-            reject(`Maintenance request not found: ${request._id}`);
-          }
-          console.log("Maintenance request updated successfully:", data);
-          resolve(data);
-        })
-        .catch((err) => {
-          console.error("Error updating maintenance request:", err);
-          reject(err);
-        });
-    });
-  }
-
-  deleteMaintenanceRequest(id) {
-    return new Promise((resolve, reject) => {
-      if (!id) {
-        reject("Maintenance request ID is required");
-        return;
-      }
-
-      MaintenanceRequest.findByIdAndDelete(id)
-        .then((data) => {
-          if (!data) {
-            console.log(`Maintenance request not found: ${id}`);
-            reject(`Maintenance request not found: ${id}`);
-          }
-          console.log("Maintenance request deleted successfully:", data);
-          resolve(data);
-        })
-        .catch((err) => {
-          console.error("Error deleting maintenance request:", err);
-          reject(err);
-        });
-    });
-  }
-
-  // Additional useful functions
-
-  getMaintenanceRequestsByStatus(status) {
-    return new Promise((resolve, reject) => {
-      MaintenanceRequest.find({ status })
-        .populate("customerId")
-        .populate("technicianId")
-        .populate("partsUsed.partId")
-        .then((data) => {
-          console.log(
-            `Found ${data.length} maintenance requests with status: ${status}`
-          );
-          resolve(data);
-        })
-        .catch((err) => {
-          console.error("Error getting maintenance requests by status:", err);
-          reject(err);
-        });
-    });
-  }
-
-  getMaintenanceRequestsByTechnician(technicianId) {
-    return new Promise((resolve, reject) => {
-      MaintenanceRequest.find({ technicianId })
-        .populate("customerId")
-        .populate("technicianId")
-        .populate("partsUsed.partId")
-        .then((data) => {
-          console.log(
-            `Found ${data.length} maintenance requests for technician: ${technicianId}`
-          );
-          resolve(data);
-        })
-        .catch((err) => {
-          console.error(
-            "Error getting maintenance requests by technician:",
-            err
-          );
-          reject(err);
-        });
-    });
-  }
-
-  getMaintenanceRequestsByCustomer(customerId) {
-    return new Promise((resolve, reject) => {
-      MaintenanceRequest.find({ customerId })
-        .populate("customerId")
-        .populate("technicianId")
-        .populate("partsUsed.partId")
-        .then((data) => {
-          console.log(
-            `Found ${data.length} maintenance requests for customer: ${customerId}`
-          );
-          resolve(data);
-        })
-        .catch((err) => {
-          console.error("Error getting maintenance requests by customer:", err);
           reject(err);
         });
     });
