@@ -367,11 +367,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
       try {
         const newRequest = {
-          requestNumber: `#MR${String(requests.length + 1).padStart(3, "0")}`,
+          orderId: `#MR${String(requests.length + 1).padStart(3, "0")}`,
+          type: "صيانة",
           // Use selected IDs from the hidden fields
           customerId: document.getElementById("customerId").value,
-          deviceType: document.getElementById("deviceType").value,
           priority: document.getElementById("priority").value,
+          deviceType: document.getElementById("deviceType").value,
           description: document.getElementById("description").value,
           status: "جديد",
           date: new Date().toISOString().split("T")[0],

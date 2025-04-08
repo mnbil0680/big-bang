@@ -1,5 +1,12 @@
 const mongoose = require("mongoose");
 
+// Helper to get tomorrow's date
+const getTomorrow = () => {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  return tomorrow;
+};
+
 // Order Schema (for both maintenance and installation)
 const orderSchema = new mongoose.Schema(
   {
@@ -43,12 +50,23 @@ const orderSchema = new mongoose.Schema(
       default: "جديد",
     },
     description: String,
-    scheduledDate: Date,
-    completionDate: Date,
-    technician: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Technician",
+    scheduledDate: {
+      type: Date,
+      default: getTomorrow,
     },
+    completionDate: {
+      type: Date,
+      default: null,
+    },
+
+    technicians: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Technician",
+        required: true,
+      },
+    ],
+
     items: [
       {
         itemId: {
@@ -68,16 +86,19 @@ const orderSchema = new mongoose.Schema(
         },
       },
     ],
+
     totalAmount: {
       type: Number,
       required: true,
       min: 0,
     },
+
     paymentStatus: {
       type: String,
       enum: ["معلق", "جزئى", "مكتمل"],
       default: "معلق",
     },
+
     notes: String,
   },
   {
@@ -86,7 +107,7 @@ const orderSchema = new mongoose.Schema(
   }
 );
 
-// Add index for better query performance
+// Indexes for performance
 orderSchema.index({ orderId: 1 }, { unique: true });
 orderSchema.index({ customerId: 1 });
 orderSchema.index({ status: 1 });
