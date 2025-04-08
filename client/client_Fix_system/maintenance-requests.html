@@ -301,9 +301,11 @@
                 <div class="invalid-feedback">يرجى اختيار العميل</div>
               </div>
               <!-- Custom Searchable Technician Input -->
+              <!-- Custom Searchable Multiple Technicians Input -->
+              <!-- Technician Multi-Select Field -->
               <div class="mb-3">
                 <label for="technicianSearchInput" class="form-label"
-                  >الفني المسؤول</label
+                  >الفنيين المسؤولين</label
                 >
                 <input
                   type="text"
@@ -312,14 +314,43 @@
                   placeholder="ابحث عن الفني..."
                   autocomplete="off"
                 />
-                <input type="hidden" id="technicianId" />
+                <!-- Dropdown for technician search results -->
                 <div
                   id="technicianDropdown"
                   class="dropdown-menu custom-dropdown"
                   style="width: 100%; max-height: 200px; overflow-y: auto"
                 ></div>
-                <div class="invalid-feedback">يرجى اختيار الفني</div>
+                <!-- Container for selected technicians (displayed as badges) -->
+                <div
+                  id="selectedTechnicians"
+                  class="mt-2 d-flex flex-wrap gap-2"
+                ></div>
+                <div class="invalid-feedback">يرجى اختيار فني واحد أو أكثر</div>
               </div>
+
+              <!-- Inventory Items Multi-Select Field -->
+              <div class="mb-3">
+                <label for="inventorySearchInput" class="form-label"
+                  >عناصر المخزون</label
+                >
+                <input
+                  type="text"
+                  id="inventorySearchInput"
+                  class="form-control custom-search-input"
+                  placeholder="ابحث عن عنصر المخزون..."
+                  autocomplete="off"
+                />
+                <!-- Dropdown for inventory search results -->
+                <div
+                  id="inventoryDropdown"
+                  class="dropdown-menu custom-dropdown"
+                  style="width: 100%; max-height: 200px; overflow-y: auto"
+                ></div>
+                <!-- Container for selected inventory items. Each item will be rendered with quantity controls. -->
+                <div id="selectedInventoryItems" class="mt-2"></div>
+                <div class="invalid-feedback">يرجى اختيار عنصر المخزون</div>
+              </div>
+
               <!-- Other Form Fields -->
               <div class="mb-3">
                 <label for="deviceType" class="form-label"

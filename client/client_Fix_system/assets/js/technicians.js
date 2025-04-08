@@ -182,6 +182,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   // ----- POPULATE TECHNICIANS TABLE -----
+  // In the loadTechnicians function, modify the row.innerHTML to include the assignments column
+
   async function loadTechnicians() {
     const techniciansTableBody = document.querySelector(
       "#techniciansTable tbody"
@@ -194,30 +196,36 @@ document.addEventListener("DOMContentLoaded", async () => {
       const technicians = await res.json();
       techniciansTableBody.innerHTML = "";
       technicians.forEach((tech) => {
+        // Get the count of current assignments
+        const activeAssignments = tech.assignments
+          ? tech.assignments.filter((a) => a.status !== "completed").length
+          : 0;
+
         const row = document.createElement("tr");
         row.innerHTML = `
-          <td>${tech.employeeId}</td>
-          <td>${tech.name}</td>
-          <td>${tech.specialization ? tech.specialization.join(", ") : ""}</td>
-          <td>${tech.phone}</td>
-          <td>${tech.isAvailable ? "متاح" : "غير متاح"}</td>
-          <td>
-            <button class="btn btn-sm btn-info" onclick="viewTechnician('${
-              tech._id
-            }')">عرض</button>
-            <button class="btn btn-sm btn-primary" onclick="editTechnician('${
-              tech._id
-            }')">تعديل</button>
-            <button class="btn btn-sm btn-danger" onclick="deleteTechnician('${
-              tech._id
-            }')">حذف</button>
-          </td>
-        `;
+        <td>${tech.employeeId}</td>
+        <td>${tech.name}</td>
+        <td>${tech.specialization ? tech.specialization.join(", ") : ""}</td>
+        <td>${tech.phone}</td>
+        <td>${tech.isAvailable ? "متاح" : "غير متاح"}</td>
+        <td>${activeAssignments} مهمة</td>
+        <td>
+          <button class="btn btn-sm btn-info" onclick="viewTechnician('${
+            tech._id
+          }')">عرض</button>
+          <button class="btn btn-sm btn-primary" onclick="editTechnician('${
+            tech._id
+          }')">تعديل</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteTechnician('${
+            tech._id
+          }')">حذف</button>
+        </td>
+      `;
         techniciansTableBody.appendChild(row);
       });
     } catch (error) {
       showMessage("Error fetching technicians: " + error.message, "danger");
-      techniciansTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">حدث خطأ أثناء تحميل الفنيين.</td></tr>`;
+      techniciansTableBody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">حدث خطأ أثناء تحميل الفنيين.</td></tr>`;
     }
   }
 
@@ -318,7 +326,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   loadTechnicians();
 });
 
-// Function to view technician details in a modal
 function viewTechnician(id) {
   fetch(API + "/technicians/" + id)
     .then((res) => {
@@ -328,7 +335,12 @@ function viewTechnician(id) {
       return res.json();
     })
     .then((data) => {
-      // Build HTML with technician details. Adjust as needed.
+      // Count active assignments
+      const activeAssignments = data.assignments
+        ? data.assignments.map((a) => a.orderId.orderId)
+        : [];
+
+      // Build HTML with technician details
       const detailsHtml = `
           <strong>رقم الموظف:</strong> ${data.employeeId}<br>
           <strong>الاسم:</strong> ${data.name}<br>
@@ -337,6 +349,11 @@ function viewTechnician(id) {
           }<br>
           <strong>رقم الهاتف:</strong> ${data.phone}<br>
           <strong>متاح:</strong> ${data.isAvailable ? "نعم" : "لا"}<br>
+          <strong>المهام الحالية:</strong> ${
+            activeAssignments.length > 0
+              ? activeAssignments.join(", ")
+              : "لا توجد مهام"
+          }<br>
         `;
       document.getElementById("viewTechnicianDetails").innerHTML = detailsHtml;
 
@@ -349,7 +366,6 @@ function viewTechnician(id) {
       console.error("Error fetching technician details:", err);
     });
 }
-
 // Global technician object
 window.currentTech = null;
 

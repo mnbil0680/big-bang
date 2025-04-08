@@ -87,12 +87,6 @@ const orderSchema = new mongoose.Schema(
       },
     ],
 
-    totalAmount: {
-      type: Number,
-      required: true,
-      min: 0,
-    },
-
     paymentStatus: {
       type: String,
       enum: ["معلق", "جزئى", "مكتمل"],

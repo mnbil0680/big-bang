@@ -371,6 +371,7 @@ class Database {
     return new Promise((resolve, reject) => {
       Inventory.find()
         .then((data) => {
+          console.log(data);
           console.log(`Found ${data.length} inventory items`);
           resolve(data);
         })
@@ -439,36 +440,34 @@ class Database {
     return new Promise(async (resolve, reject) => {
       try {
         // Basic validation
-        if (!orderData || !orderData.items || !Array.isArray(orderData.items)) {
+        if (!orderData || !Array.isArray(orderData.items)) {
           return reject("Valid order data with items array is required");
         }
 
-        // Validate required fields from the original code
+        // Required fields
         if (!orderData.orderId || !orderData.customerId || !orderData.type) {
           return reject("orderId, customerId, and type are required fields");
         }
 
-        // Validate new required fields
         if (
           !orderData.priority ||
           !orderData.deviceType ||
-          orderData.totalPrice === undefined // totalPrice can be 0
+          orderData.totalPrice === undefined
         ) {
           return reject(
             "priority, deviceType, and totalPrice are required fields"
           );
         }
 
-        // Validate the new field values
         const allowedPriorities = ["عالية", "متوسطة", "منخفضة"];
         if (!allowedPriorities.includes(orderData.priority)) {
           return reject(
             `priority must be one of: ${allowedPriorities.join(", ")}`
           );
         }
-        if (orderData.totalPrice < 0) {
+
+        if (orderData.totalPrice < 0)
           return reject("totalPrice must be non-negative");
-        }
         if (
           orderData.estimatedCost !== undefined &&
           orderData.estimatedCost < 0
@@ -476,12 +475,10 @@ class Database {
           return reject("estimatedCost must be non-negative if provided");
         }
 
-        // Validate items array is not empty
         if (orderData.items.length === 0) {
           return reject("Order must contain at least one item");
         }
 
-        // Validate items structure
         for (const item of orderData.items) {
           if (
             !item.itemId ||
@@ -497,42 +494,77 @@ class Database {
           }
         }
 
-        // Add timestamps
-        orderData.createdDate = new Date();
-        orderData.updatedDate = new Date();
-
-        // Validate customer exists
+        // Validate customer
         const customer = await Customer.findById(orderData.customerId);
         if (!customer) {
           return reject(`Customer ${orderData.customerId} not found`);
         }
 
-        // Validate and check inventory for each item
+        // Validate technicians array
+        if (
+          !Array.isArray(orderData.technicians) ||
+          orderData.technicians.length === 0
+        ) {
+          return reject("At least one technician is required");
+        }
+
+        for (const techId of orderData.technicians) {
+          const tech = await Technician.findById(techId);
+          if (!tech) return reject(`Technician ${techId} not found`);
+        }
+
+        // Validate inventory
         for (const item of orderData.items) {
           const inventory = await Inventory.findById(item.itemId);
-          if (!inventory) {
+          if (!inventory)
             return reject(`Inventory item ${item.itemId} not found`);
-          }
           if (inventory.quantity < item.quantity) {
-            return reject(
-              `Insufficient quantity for item ${item.itemId}. Available: ${inventory.quantity}, Requested: ${item.quantity}`
-            );
+            return reject(`Insufficient quantity for item ${item.itemId}`);
           }
         }
 
-        // Create and save the order
+        // Save order
         const newOrder = new Order(orderData);
         const savedOrder = await newOrder.save();
 
-        // Update inventory quantities for each item
+        // Update inventory quantities
         for (const item of orderData.items) {
           await Inventory.findByIdAndUpdate(item.itemId, {
             $inc: { quantity: -item.quantity },
           });
         }
 
-        console.log("Order created successfully:", savedOrder);
-        resolve(savedOrder);
+        // Update technician assignments
+        const techAssignmentPromises = orderData.technicians.map((techId) => {
+          return Technician.findByIdAndUpdate(techId, {
+            $push: {
+              assignments: {
+                orderId: savedOrder._id,
+                date: new Date(),
+                status: savedOrder.status,
+              },
+            },
+          });
+        });
+
+        await Promise.all(techAssignmentPromises);
+
+        // Update customer's orders array
+        await Customer.findByIdAndUpdate(orderData.customerId, {
+          $push: { orders: savedOrder._id },
+        });
+
+        Order.findById(savedOrder._id)
+          .populate("customerId")
+          .populate("technicians")
+          .populate("items.itemId")
+          .then((populatedOrder) => {
+            console.log("Order created successfully:", populatedOrder);
+            resolve(populatedOrder);
+          })
+          .catch((err) => {
+            reject(err);
+          });
       } catch (error) {
         console.error("Error creating order:", error);
         reject(error.message || "Error creating order");
@@ -544,7 +576,7 @@ class Database {
     return new Promise((resolve, reject) => {
       Order.find()
         .populate("customerId")
-        .populate("technician")
+        .populate("technicians")
         .populate("items.itemId")
         .then((data) => {
           console.log(`Found ${data.length} orders`);
@@ -559,20 +591,14 @@ class Database {
 
   getOrderById(id) {
     return new Promise((resolve, reject) => {
-      if (!id) {
-        reject("Order ID is required");
-        return;
-      }
+      if (!id) return reject("Order ID is required");
 
       Order.findById(id)
         .populate("customerId")
-        .populate("technician")
+        .populate("technicians")
         .populate("items.itemId")
         .then((data) => {
-          if (!data) {
-            console.log(`Order not found: ${id}`);
-            reject(`Order not found: ${id}`);
-          }
+          if (!data) return reject(`Order not found: ${id}`);
           console.log("Order retrieved successfully:", data);
           resolve(data);
         })
@@ -584,82 +610,175 @@ class Database {
   }
 
   updateOrder(order) {
-    return new Promise((resolve, reject) => {
-      if (!order || !order._id) {
-        reject("Order ID is required");
-        return;
-      }
+    return new Promise(async (resolve, reject) => {
+      try {
+        if (!order || !order._id) return reject("Order ID is required");
 
-      // Update the updatedDate field
-      order.updatedDate = new Date();
+        order.updatedAt = new Date(); // Optional, as timestamps do this automatically
 
-      // First find the original order
-      Order.findById(order._id)
-        .then((originalOrder) => {
-          if (!originalOrder) {
-            throw new Error(`Order not found: ${order._id}`);
+        // Find the original order
+        const originalOrder = await Order.findById(order._id);
+        if (!originalOrder) throw new Error(`Order not found: ${order._id}`);
+
+        // Check if status changed to "ملغي" (canceled)
+        if (order.status === "ملغي" && originalOrder.status !== "ملغي") {
+          // Return all items to inventory
+          for (const item of originalOrder.items) {
+            await Inventory.findByIdAndUpdate(item.itemId, {
+              $inc: { quantity: item.quantity },
+            });
           }
-
-          // Process inventory updates for changed items
-          const inventoryPromises = order.items.map((newItem) => {
+        }
+        // If not canceled, handle normal inventory adjustments
+        else if (order.status !== "ملغي") {
+          // Update inventory based on quantity differences
+          const inventoryPromises = order.items.map(async (newItem) => {
+            // Find matching item in original order
             const oldItem = originalOrder.items.find(
               (i) => i.itemId.toString() === newItem.itemId.toString()
             );
+
+            // Calculate quantity difference
             const quantityDiff = oldItem
               ? newItem.quantity - oldItem.quantity
               : newItem.quantity;
 
-            return Inventory.findById(newItem.itemId).then((inventory) => {
+            if (quantityDiff !== 0) {
+              const inventory = await Inventory.findById(newItem.itemId);
               if (!inventory) {
                 throw new Error(`Inventory item ${newItem.itemId} not found`);
               }
-              inventory.quantity -= quantityDiff;
-              if (inventory.quantity < 0) {
+
+              // Check if we have enough quantity
+              if (inventory.quantity < quantityDiff) {
                 throw new Error(
                   `Insufficient quantity for item ${newItem.itemId}`
                 );
               }
-              return inventory.save();
-            });
+
+              // Update inventory
+              await Inventory.findByIdAndUpdate(newItem.itemId, {
+                $inc: { quantity: -quantityDiff },
+              });
+            }
           });
 
-          return Promise.all(inventoryPromises).then(() => {
-            return Order.findByIdAndUpdate(order._id, order, { new: true });
-          });
+          await Promise.all(inventoryPromises);
+        }
+
+        // Handle technician assignments
+        const isCompletedOrRejected = ["مكتمل", "ملغي"].includes(order.status);
+        const originalTechIds = originalOrder.technicians.map((tech) =>
+          tech.toString()
+        );
+        const newTechIds = order.technicians.map((tech) => tech.toString());
+
+        // Remove assignments for technicians no longer on the order or if order is completed/rejected
+        if (isCompletedOrRejected || originalTechIds.length > 0) {
+          const techsToRemove = isCompletedOrRejected
+            ? originalTechIds
+            : originalTechIds.filter((id) => !newTechIds.includes(id));
+
+          for (const techId of techsToRemove) {
+            await Technician.findByIdAndUpdate(techId, {
+              $pull: { assignments: { orderId: order._id } },
+            });
+          }
+        }
+
+        // Add assignments for new technicians if order is not completed/rejected
+        if (!isCompletedOrRejected) {
+          const techsToAdd = newTechIds.filter(
+            (id) => !originalTechIds.includes(id)
+          );
+
+          for (const techId of techsToAdd) {
+            await Technician.findByIdAndUpdate(techId, {
+              $push: {
+                assignments: {
+                  orderId: order._id,
+                  date: new Date(),
+                  status: order.status,
+                },
+              },
+            });
+          }
+
+          // Update status for existing technicians
+          const techsToUpdate = newTechIds.filter((id) =>
+            originalTechIds.includes(id)
+          );
+
+          for (const techId of techsToUpdate) {
+            await Technician.findOneAndUpdate(
+              {
+                _id: techId,
+                "assignments.orderId": order._id,
+              },
+              {
+                $set: { "assignments.$.status": order.status },
+              }
+            );
+          }
+        }
+
+        // Save updated order
+        const updatedOrder = await Order.findByIdAndUpdate(order._id, order, {
+          new: true,
         })
-        .then((updatedOrder) => {
-          console.log("Order updated successfully:", updatedOrder);
-          resolve(updatedOrder);
-        })
-        .catch((err) => {
-          console.error("Error updating order:", err);
-          reject(err);
-        });
+          .populate("customerId")
+          .populate("technicians")
+          .populate("items.itemId");
+
+        console.log("Order updated successfully:", updatedOrder);
+        resolve(updatedOrder);
+      } catch (err) {
+        console.error("Error updating order:", err);
+        reject(err);
+      }
     });
   }
 
   deleteOrder(id) {
-    return new Promise((resolve, reject) => {
-      if (!id) {
-        reject("Order ID is required");
-        return;
-      }
+    return new Promise(async (resolve, reject) => {
+      try {
+        if (!id) return reject("Order ID is required");
 
-      Order.findByIdAndDelete(id)
-        .then((deletedOrder) => {
-          if (!deletedOrder) {
-            throw new Error("Order not found");
+        const order = await Order.findById(id);
+        if (!order) throw new Error("Order not found");
+
+        // If status is not "مكتمل" (completed) or "ملغي" (canceled), return items to inventory
+        if (!["مكتمل", "ملغي"].includes(order.status)) {
+          // Return items to inventory
+          for (const item of order.items) {
+            await Inventory.findByIdAndUpdate(item.itemId, {
+              $inc: { quantity: item.quantity },
+            });
           }
-          console.log("Order deleted successfully:", deletedOrder);
-          resolve(deletedOrder);
-        })
-        .catch((err) => {
-          console.error("Error deleting order:", err);
-          reject(err);
+
+          // Remove from technician assignments
+          for (const techId of order.technicians) {
+            await Technician.findByIdAndUpdate(techId, {
+              $pull: { assignments: { orderId: order._id } },
+            });
+          }
+        }
+
+        // Remove from customer's orders array
+        await Customer.findByIdAndUpdate(order.customerId, {
+          $pull: { orders: order._id },
         });
+
+        // Delete the order
+        const deletedOrder = await Order.findByIdAndDelete(id);
+        console.log("Order deleted successfully:", deletedOrder);
+        resolve(deletedOrder);
+      } catch (err) {
+        console.error("Error deleting order:", err);
+        reject(err);
+      }
     });
   }
-
   ////////////////////////////////////////////////////////
 
   addTechnician(technicianData) {
@@ -683,6 +802,7 @@ class Database {
   getTechnicians() {
     return new Promise((resolve, reject) => {
       Technician.find()
+        .populate("assignments.orderId")
         .then((data) => {
           console.log(`Found ${data.length} technicians`);
           resolve(data);
@@ -702,6 +822,7 @@ class Database {
       }
 
       Technician.findById(id)
+        .populate("assignments.orderId")
         .then((data) => {
           if (!data) {
             console.log(`Technician not found: ${id}`);
@@ -727,6 +848,7 @@ class Database {
       technician["updatedDate"] = new Date();
 
       Technician.findByIdAndUpdate(technician["_id"], technician, { new: true })
+        .populate("assignments.orderId")
         .then((data) => {
           if (!data) {
             console.log(`Technician not found: ${technician["_id"]}`);
@@ -750,6 +872,7 @@ class Database {
       }
 
       Technician.findByIdAndDelete(id)
+        .populate("assignments.orderId")
         .then((data) => {
           if (!data) {
             console.log(`Technician not found: ${id}`);
