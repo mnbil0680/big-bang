@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-
+require("dotenv").config();
 // Bonds
 const Voucher = require("./schema/Bonds/voucher");
 const Settings = require("./schema/Bonds/settings");
