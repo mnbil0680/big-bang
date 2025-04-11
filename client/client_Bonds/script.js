@@ -49,7 +49,6 @@ function voucherSystem() {
 
     init() {
       this.loadData();
-      this.generateNewVoucherNumber();
       this.applyFilters();
 
       // Update charts when active tab changes
@@ -112,6 +111,7 @@ function voucherSystem() {
         this.vouchers = vouchers;
         this.filteredVouchers = [...vouchers];
         this.applyFilters();
+        this.generateNewVoucherNumber();
       } catch (error) {
         console.error("Error loading data:", error);
         this.showMessage(
@@ -193,26 +193,46 @@ function voucherSystem() {
       }
     },
 
-    // Generate new voucher number based on voucher type
     generateNewVoucherNumber() {
-      // If the voucher type is "قبض" (receipt), use the receipt prefix; otherwise (i.e. "صرف"), use the payment prefix.
+      // Determine the prefix based on the voucher type
       const prefix =
         this.newVoucher.type === "قبض"
           ? this.settings.receiptPrefix
           : this.settings.paymentPrefix;
 
-      const date = new Date();
-      const year = date.getFullYear().toString();
-      const month = (date.getMonth() + 1).toString().padStart(2, "0");
+      // Get the current date components
+      const now = new Date();
+      const year = now.getFullYear().toString();
+      const month = (now.getMonth() + 1).toString().padStart(2, "0");
+      const day = now.getDate().toString().padStart(2, "0");
 
+      // Filter vouchers of the same type
       const typeVouchers = this.vouchers.filter(
         (v) => v.type === this.newVoucher.type
       );
+
+      // Generate a sequential counter (1-based index)
       const count = typeVouchers.length + 1;
 
-      this.newVoucher.voucherNumber = `${prefix}${year}${month}-${count
+      // Create a base voucher number with the format: PREFIX-YYYYMMDD-COUNT
+      const baseVoucherNumber = `${prefix}${year}${month}${day}-${count
         .toString()
         .padStart(3, "0")}`;
+
+      // Ensure the voucher number is unique by appending a timestamp if necessary
+      let uniqueVoucherNumber = baseVoucherNumber;
+      let timestampSuffix = 0;
+
+      while (
+        this.vouchers.some((v) => v.voucherNumber === uniqueVoucherNumber)
+      ) {
+        // If the voucher number already exists, append a timestamp suffix
+        timestampSuffix++;
+        uniqueVoucherNumber = `${baseVoucherNumber}-${timestampSuffix}`;
+      }
+
+      // Assign the unique voucher number
+      this.newVoucher.voucherNumber = uniqueVoucherNumber;
     },
 
     // Reset the voucher form

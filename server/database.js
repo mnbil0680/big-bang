@@ -626,6 +626,7 @@ class Database {
 
         // Find the original order
         const originalOrder = await Order.findById(order._id);
+
         if (!originalOrder) {
           throw new Error(`Order not found: ${order._id}`);
         }
@@ -650,7 +651,6 @@ class Database {
             const quantityDiff = oldItem
               ? newItem.quantity - oldItem.quantity
               : newItem.quantity;
-
             if (quantityDiff !== 0) {
               const inventory = await Inventory.findById(newItem.itemId);
               if (!inventory) {

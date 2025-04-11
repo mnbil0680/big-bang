@@ -1,5 +1,125 @@
 import { fetchWithErrorHandling, showErrorMessage } from "./utils.js";
 const API = "http://localhost:3000";
+// Existing global variables
+let requests = [];
+
+let currentPage = 1; // Track the current page globally
+// Function to change the current page
+window.changePage = (page) => {
+  currentPage = page; // Update the global currentPage variable
+  renderTable(requests); // Re-render the table with the new page
+};
+function renderTable(data) {
+  const itemsPerPage = 5; // Number of items per page
+  const totalPages = Math.ceil(data.length / itemsPerPage); // Total number of pages
+
+  // Helper function to render a single page
+  function renderPage(page) {
+    const tbody = document.getElementById("requestsTableBody");
+    tbody.innerHTML = ""; // Clear the table body
+
+    // Calculate the start and end indices for the current page
+    const startIndex = (page - 1) * itemsPerPage;
+    const endIndex = page * itemsPerPage;
+    const pageData = data.slice(startIndex, endIndex);
+
+    // Render rows for the current page
+    pageData.forEach((req) => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${req.orderId || "N/A"}</td>
+        <td>${req.customerId?.name || "غير متوفر"}</td>
+        <td>${req.deviceType || "غير متوفر"}</td>
+        <td>
+          <span class="badge bg-${
+            req.priority === "عالية"
+              ? "danger"
+              : req.priority === "متوسطة"
+              ? "warning"
+              : "info"
+          }">
+            ${req.priority || "غير محدد"}
+          </span>
+        </td>
+        <td>
+          <span class="badge bg-${
+            req.status === "مكتمل"
+              ? "success"
+              : req.status === "قيد المعالجة"
+              ? "warning"
+              : req.status === "جديد"
+              ? "info"
+              : "danger"
+          }">
+            ${req.status || "غير محدد"}
+          </span>
+        </td>
+        <td>${new Date(req.createdAt).toLocaleString("ar-EG")}</td>
+        <td>${
+          req.technicians
+            ? req.technicians.map((t) => t.name).join(", ")
+            : "غير معين"
+        }</td>
+        <td class="table-actions">
+          <button class="btn btn-sm btn-info" data-bs-toggle="tooltip" title="عرض التفاصيل" onclick="viewRequest('${
+            req._id
+          }')"><i class="bi bi-eye"></i></button>
+          <button class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="تعديل" onclick="editRequest('${
+            req._id
+          }')"><i class="bi bi-pencil"></i></button>
+          <button class="btn btn-sm btn-danger" data-bs-toggle="tooltip" title="حذف" onclick="deleteRequest('${
+            req._id
+          }')"><i class="bi bi-trash"></i></button>
+        </td>
+      `;
+      tbody.appendChild(row);
+    });
+
+    // Reinitialize tooltips after rendering the table
+    const tooltipTriggerList = [].slice.call(
+      document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    );
+    tooltipTriggerList.map((el) => new bootstrap.Tooltip(el));
+
+    // Update pagination controls
+    updatePagination(totalPages, page);
+  }
+
+  // Update pagination controls dynamically
+  function updatePagination(totalPages, currentPage) {
+    const pagination = document.querySelector(".pagination");
+    pagination.innerHTML = ""; // Clear existing pagination
+
+    // Add "Previous" button
+    const prevButton = document.createElement("li");
+    prevButton.className = `page-item ${currentPage === 1 ? "disabled" : ""}`;
+    prevButton.innerHTML = `<a class="page-link" href="#" onclick="changePage(${
+      currentPage - 1
+    })">السابق</a>`;
+    pagination.appendChild(prevButton);
+
+    // Add page numbers
+    for (let i = 1; i <= totalPages; i++) {
+      const pageItem = document.createElement("li");
+      pageItem.className = `page-item ${i === currentPage ? "active" : ""}`;
+      pageItem.innerHTML = `<a class="page-link" href="#" onclick="changePage(${i})">${i}</a>`;
+      pagination.appendChild(pageItem);
+    }
+
+    // Add "Next" button
+    const nextButton = document.createElement("li");
+    nextButton.className = `page-item ${
+      currentPage === totalPages ? "disabled" : ""
+    }`;
+    nextButton.innerHTML = `<a class="page-link" href="#" onclick="changePage(${
+      currentPage + 1
+    })">التالي</a>`;
+    pagination.appendChild(nextButton);
+  }
+
+  // Initial render for the first page
+  renderPage(currentPage);
+}
 
 document.addEventListener("DOMContentLoaded", async () => {
   // Sidebar toggle (existing code)
@@ -105,7 +225,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   };
 
-  let requests = [];
   // Fetch maintenance requests from the API and render the table
   try {
     const res = await fetch(API + "/orders");
@@ -117,67 +236,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.error("Error fetching orders requests:", error);
   }
   console.log(requests);
-
-  function renderTable(data) {
-    const tbody = document.getElementById("requestsTableBody");
-    tbody.innerHTML = "";
-    data.forEach((req) => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${req.orderId || "N/A"}</td>
-        <td>${req.customerId?.name || "غير متوفر"}</td>
-        <td>${req.deviceType || "غير متوفر"}</td>
-        <td>
-          <span class="badge bg-${
-            req.priority === "عالية"
-              ? "danger"
-              : req.priority === "متوسطة"
-              ? "warning"
-              : "info"
-          }">
-            ${req.priority || "غير محدد"}
-          </span>
-        </td>
-        <td>
-          <span class="badge bg-${
-            req.status === "مكتمل"
-              ? "success"
-              : req.status === "قيد المعالجة"
-              ? "warning"
-              : req.status === "جديد"
-              ? "info"
-              : "danger"
-          }">
-            ${req.status || "غير محدد"}
-          </span>
-        </td>
-        <td>${new Date(req.createdAt).toLocaleString("ar-EG")}</td>
-        <td>${
-          req.technicians
-            ? req.technicians.map((t) => t.name).join(", ")
-            : "غير معين"
-        }</td>
-        <td class="table-actions">
-          <button class="btn btn-sm btn-info" data-bs-toggle="tooltip" title="عرض التفاصيل" onclick="viewRequest('${
-            req._id
-          }')"><i class="bi bi-eye"></i></button>
-          <button class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="تعديل" onclick="editRequest('${
-            req._id
-          }')"><i class="bi bi-pencil"></i></button>
-          <button class="btn btn-sm btn-danger" data-bs-toggle="tooltip" title="حذف" onclick="deleteRequest('${
-            req._id
-          }')"><i class="bi bi-trash"></i></button>
-        </td>
-      `;
-      tbody.appendChild(row);
-    });
-
-    // Reinitialize tooltips after table render
-    const tooltipTriggerList = [].slice.call(
-      document.querySelectorAll('[data-bs-toggle="tooltip"]')
-    );
-    tooltipTriggerList.map((el) => new bootstrap.Tooltip(el));
-  }
 
   // --- Customer Search Setup ---
   let customers = [];
@@ -842,11 +900,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   window.editRequest = async (id) => {
     console.log(id);
     try {
-      // Fetch the current order data using fetchWithErrorHandling
-      const { success, data, error } = await fetchWithErrorHandling(
-        API + "/orders/" + id
-      );
-      if (!success) throw new Error(error);
+      // First fetch the current order data
+      const res = await fetch(API + "/orders/" + id);
+      if (!res.ok) throw new Error("فشل في جلب بيانات الطلب");
+      const data = await res.json();
 
       // Create edit modal HTML
       const modalHTML = `
@@ -981,6 +1038,30 @@ document.addEventListener("DOMContentLoaded", async () => {
                         data.notes || ""
                       }</textarea>
                     </div>
+                    <!-- Items Section -->
+                    <div class="col-12">
+                      <h5>العناصر</h5>
+                      <div id="editItemsContainer">
+                        ${data.items
+                          .map(
+                            (item, index) => `
+                          <div class="row align-items-center mb-2">
+                            <div class="col-md-8">
+                              <label class="form-label">${
+                                item.itemId.name || "عنصر غير معروف"
+                              }</label>
+                            </div>
+                            <div class="col-md-4">
+                              <input type="number" class="form-control" id="editItemQuantity-${index}" value="${
+                              item.quantity
+                            }" min="1" required>
+                            </div>
+                          </div>
+                        `
+                          )
+                          .join("")}
+                      </div>
+                    </div>
                   </div>
                 </form>
               </div>
@@ -991,7 +1072,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             </div>
           </div>
         </div>`;
-
       // Add modal to document if it doesn't exist
       let modalElement = document.getElementById("editRequestModal");
       if (modalElement) {
@@ -1026,6 +1106,14 @@ document.addEventListener("DOMContentLoaded", async () => {
               paymentStatus: document.getElementById("editPaymentStatus").value,
               description: document.getElementById("editDescription").value,
               notes: document.getElementById("editNotes").value,
+              items: data.items.map((item, index) => ({
+                itemId: item.itemId._id || item.itemId,
+                quantity: parseInt(
+                  document.getElementById(`editItemQuantity-${index}`).value,
+                  10
+                ),
+                price: item.price,
+              })),
             };
 
             // Add dates if they have values
@@ -1043,33 +1131,39 @@ document.addEventListener("DOMContentLoaded", async () => {
             // Preserve fields that aren't editable in the form
             updatedOrder.orderId = data.orderId;
             updatedOrder.customerId = data.customerId;
-            updatedOrder.technicians = data.technicians;
-            updatedOrder.items = data.items;
 
-            // Send update request using fetchWithErrorHandling
-            const { success: updateSuccess, error: updateError } =
-              await fetchWithErrorHandling(`${API}/orders/${id}`, {
-                method: "PUT",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify(updatedOrder),
-              });
+            // Ensure technicians array contains only valid ObjectId strings
+            updatedOrder.technicians = data.technicians.map((tech) =>
+              typeof tech === "object" ? tech._id : tech
+            );
 
-            if (!updateSuccess) {
-              throw new Error(updateError || "حدث خطأ أثناء تحديث الطلب");
+            // Send update request
+            const updateRes = await fetch(`${API}/orders/${id}`, {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(updatedOrder),
+            });
+
+            if (!updateRes.ok) {
+              const errorData = await updateRes.json();
+              throw new Error(
+                `فشل في تحديث الطلب: ${
+                  errorData.message || updateRes.statusText
+                }`
+              );
             }
 
-            // Hide modal
+            // Hide modal and show success message
             modal.hide();
-
-            // Show success message
             showErrorMessage("تم تحديث الطلب بنجاح", true);
 
             // Refresh the orders table or view if needed
             if (typeof loadOrders === "function") {
               loadOrders();
             }
+            renderTable(requests);
           } catch (error) {
             console.error("Error updating order:", error);
             showErrorMessage(`حدث خطأ أثناء تحديث الطلب: ${error.message}`);

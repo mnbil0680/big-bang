@@ -114,6 +114,7 @@
                       value="قبض"
                       class="form-radio h-5 w-5 text-blue-600"
                       required
+                      @change="generateNewVoucherNumber"
                     />
                     <span class="mr-2">سند قبض</span>
                   </label>
@@ -124,6 +125,7 @@
                       value="صرف"
                       class="form-radio h-5 w-5 text-green-600"
                       required
+                      @change="generateNewVoucherNumber"
                     />
                     <span class="mr-2">سند صرف</span>
                   </label>
