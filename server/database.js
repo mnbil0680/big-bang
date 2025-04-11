@@ -608,32 +608,40 @@ class Database {
         });
     });
   }
-
   updateOrder(order) {
     return new Promise(async (resolve, reject) => {
       try {
-        if (!order || !order._id) return reject("Order ID is required");
+        // Validate order ID
+        if (!order || !order._id) {
+          return reject("Order ID is required");
+        }
 
-        order.updatedAt = new Date(); // Optional, as timestamps do this automatically
+        // Ensure the order ID is a valid ObjectId
+        if (!mongoose.isValidObjectId(order._id)) {
+          return reject(`Invalid Order ID: ${order._id}`);
+        }
+
+        // Set updatedAt timestamp (optional, as Mongoose timestamps handle this automatically)
+        order.updatedAt = new Date();
 
         // Find the original order
         const originalOrder = await Order.findById(order._id);
-        if (!originalOrder) throw new Error(`Order not found: ${order._id}`);
+        if (!originalOrder) {
+          throw new Error(`Order not found: ${order._id}`);
+        }
 
-        // Check if status changed to "ملغي" (canceled)
+        // Handle inventory adjustments based on status changes
         if (order.status === "ملغي" && originalOrder.status !== "ملغي") {
-          // Return all items to inventory
+          // Return all items to inventory if the order is canceled
           for (const item of originalOrder.items) {
             await Inventory.findByIdAndUpdate(item.itemId, {
               $inc: { quantity: item.quantity },
             });
           }
-        }
-        // If not canceled, handle normal inventory adjustments
-        else if (order.status !== "ملغي") {
+        } else if (order.status !== "ملغي") {
           // Update inventory based on quantity differences
           const inventoryPromises = order.items.map(async (newItem) => {
-            // Find matching item in original order
+            // Find matching item in the original order
             const oldItem = originalOrder.items.find(
               (i) => i.itemId.toString() === newItem.itemId.toString()
             );
@@ -649,8 +657,8 @@ class Database {
                 throw new Error(`Inventory item ${newItem.itemId} not found`);
               }
 
-              // Check if we have enough quantity
-              if (inventory.quantity < quantityDiff) {
+              // Check if there is enough quantity in inventory
+              if (inventory.quantity < Math.abs(quantityDiff)) {
                 throw new Error(
                   `Insufficient quantity for item ${newItem.itemId}`
                 );
@@ -663,6 +671,7 @@ class Database {
             }
           });
 
+          // Wait for all inventory updates to complete
           await Promise.all(inventoryPromises);
         }
 
@@ -673,26 +682,36 @@ class Database {
         );
         const newTechIds = order.technicians.map((tech) => tech.toString());
 
-        // Remove assignments for technicians no longer on the order or if order is completed/rejected
+        // Remove assignments for technicians no longer on the order or if the order is completed/rejected
         if (isCompletedOrRejected || originalTechIds.length > 0) {
           const techsToRemove = isCompletedOrRejected
             ? originalTechIds
             : originalTechIds.filter((id) => !newTechIds.includes(id));
 
           for (const techId of techsToRemove) {
+            // Validate technician ID
+            if (!mongoose.isValidObjectId(techId)) {
+              throw new Error(`Invalid Technician ID: ${techId}`);
+            }
+
             await Technician.findByIdAndUpdate(techId, {
               $pull: { assignments: { orderId: order._id } },
             });
           }
         }
 
-        // Add assignments for new technicians if order is not completed/rejected
+        // Add assignments for new technicians if the order is not completed/rejected
         if (!isCompletedOrRejected) {
           const techsToAdd = newTechIds.filter(
             (id) => !originalTechIds.includes(id)
           );
 
           for (const techId of techsToAdd) {
+            // Validate technician ID
+            if (!mongoose.isValidObjectId(techId)) {
+              throw new Error(`Invalid Technician ID: ${techId}`);
+            }
+
             await Technician.findByIdAndUpdate(techId, {
               $push: {
                 assignments: {
@@ -710,6 +729,11 @@ class Database {
           );
 
           for (const techId of techsToUpdate) {
+            // Validate technician ID
+            if (!mongoose.isValidObjectId(techId)) {
+              throw new Error(`Invalid Technician ID: ${techId}`);
+            }
+
             await Technician.findOneAndUpdate(
               {
                 _id: techId,
@@ -722,7 +746,7 @@ class Database {
           }
         }
 
-        // Save updated order
+        // Save the updated order
         const updatedOrder = await Order.findByIdAndUpdate(order._id, order, {
           new: true,
         })

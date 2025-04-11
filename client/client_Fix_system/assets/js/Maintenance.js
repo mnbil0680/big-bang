@@ -1,4 +1,5 @@
-const API = window.SERVER_URI || "http://localhost:3000";
+import { fetchWithErrorHandling, showErrorMessage } from "./utils.js";
+const API = "http://localhost:3000";
 
 document.addEventListener("DOMContentLoaded", async () => {
   // Sidebar toggle (existing code)
@@ -155,9 +156,6 @@ document.addEventListener("DOMContentLoaded", async () => {
           req.technicians
             ? req.technicians.map((t) => t.name).join(", ")
             : "غير معين"
-        }</td>
-        <td>${
-          req.items ? req.items.map((item) => item.name).join(", ") : "لا يوجد"
         }</td>
         <td class="table-actions">
           <button class="btn btn-sm btn-info" data-bs-toggle="tooltip" title="عرض التفاصيل" onclick="viewRequest('${
@@ -566,70 +564,257 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     });
 
-  // --- Make action functions global ---
   window.viewRequest = async (id) => {
     try {
       const res = await fetch(API + "/orders/" + id);
       if (!res.ok) throw new Error("فشل في جلب بيانات الطلب");
       const data = await res.json();
+
+      // Set badge classes based on priority and status
+      const priorityBadgeClass =
+        {
+          عالية: "bg-danger",
+          متوسطة: "bg-warning",
+          منخفضة: "bg-success",
+        }[data.priority] || "bg-secondary";
+
+      const statusBadgeClass =
+        {
+          جديد: "bg-info",
+          "قيد المعالجة": "bg-primary",
+          مكتمل: "bg-success",
+          ملغي: "bg-secondary",
+        }[data.status] || "bg-secondary";
+
+      // Basic information
       document.getElementById("requestNumber").textContent =
-        data.requestNumber || "N/A";
+        data.orderId || "N/A";
       document.getElementById("requestCustomer").textContent = data.customerId
         ? data.customerId.name
         : "غير متوفر";
       document.getElementById("requestDeviceType").textContent =
         data.deviceType || "غير محدد";
-      document.getElementById("requestPriority").textContent =
-        data.priority || "غير محدد";
-      document.getElementById("requestStatus").textContent =
-        data.status || "غير محدد";
-      document.getElementById("requestCreatedDate").textContent =
-        data.createdDate
-          ? new Date(data.createdDate).toLocaleString("ar-EG")
-          : "غير محدد";
-      document.getElementById("requestTechnician").textContent =
-        data.technicians
-          ? data.technicians.map((t) => t.name).join(", ")
-          : "غير معين";
-      document.getElementById("requestDescription").textContent =
-        data.description || "لا يوجد";
-      document.getElementById("requestEstimatedCost").textContent =
-        data.estimatedCost ? data.estimatedCost + " ريال" : "غير محدد";
-      document.getElementById("requestCompletionDate").textContent =
+
+      // Apply styled badges for priority and status
+      document.getElementById(
+        "requestPriority"
+      ).innerHTML = `<span class="badge ${priorityBadgeClass}">${
+        data.priority || "غير محدد"
+      }</span>`;
+      document.getElementById(
+        "requestStatus"
+      ).innerHTML = `<span class="badge ${statusBadgeClass}">${
+        data.status || "غير محدد"
+      }</span>`;
+
+      // Format dates with nice display
+      document.getElementById("requestCreatedDate").textContent = data.createdAt
+        ? new Date(data.createdAt).toLocaleString("ar-EG")
+        : "غير محدد";
+      document.getElementById("requestCompletionDate").innerHTML =
         data.completionDate
-          ? new Date(data.completionDate).toLocaleString("ar-EG")
+          ? `<i class="fas fa-check-circle me-1 text-success"></i> ${new Date(
+              data.completionDate
+            ).toLocaleString("ar-EG")}`
+          : '<span class="text-muted"><i class="fas fa-hourglass-half me-1"></i> قيد الإنتظار</span>';
+
+      // Add a new field for scheduled date if not exists
+      const dlRow = document.querySelector(
+        "#viewRequestModal .modal-body dl.row"
+      );
+      if (!document.getElementById("requestScheduledDate")) {
+        const dtScheduled = document.createElement("dt");
+        dtScheduled.className = "col-sm-4";
+        dtScheduled.textContent = "الموعد المجدول:";
+
+        const ddScheduled = document.createElement("dd");
+        ddScheduled.className = "col-sm-8";
+        ddScheduled.id = "requestScheduledDate";
+
+        // Find the createdDate dt and insert after it
+        const createdDateDt = Array.from(dlRow.querySelectorAll("dt")).find(
+          (dt) => dt.textContent.includes("تاريخ الإنشاء")
+        );
+        if (createdDateDt) {
+          const createdDateDd = createdDateDt.nextElementSibling;
+          dlRow.insertBefore(dtScheduled, createdDateDd.nextElementSibling);
+          dlRow.insertBefore(
+            ddScheduled,
+            createdDateDd.nextElementSibling.nextElementSibling
+          );
+        } else {
+          // If not found, append to the end
+          dlRow.appendChild(dtScheduled);
+          dlRow.appendChild(ddScheduled);
+        }
+      }
+
+      // Set scheduled date value
+      document.getElementById("requestScheduledDate").innerHTML =
+        data.scheduledDate
+          ? `<i class="fas fa-calendar-alt me-1"></i> ${new Date(
+              data.scheduledDate
+            ).toLocaleString("ar-EG")}`
           : "غير محدد";
 
+      // Add payment status if not exists
+      if (!document.getElementById("requestPaymentStatus")) {
+        const dtPayment = document.createElement("dt");
+        dtPayment.className = "col-sm-4";
+        dtPayment.textContent = "حالة الدفع:";
+
+        const ddPayment = document.createElement("dd");
+        ddPayment.className = "col-sm-8";
+        ddPayment.id = "requestPaymentStatus";
+
+        // Find the status dt and insert after it
+        const statusDt = Array.from(dlRow.querySelectorAll("dt")).find((dt) =>
+          dt.textContent.includes("الحالة")
+        );
+        if (statusDt) {
+          const statusDd = statusDt.nextElementSibling;
+          dlRow.insertBefore(dtPayment, statusDd.nextElementSibling);
+          dlRow.insertBefore(
+            ddPayment,
+            statusDd.nextElementSibling.nextElementSibling
+          );
+        } else {
+          // If not found, append to the end
+          dlRow.appendChild(dtPayment);
+          dlRow.appendChild(ddPayment);
+        }
+      }
+
+      // Set payment status value with badge
+      const paymentStatusBadgeClass =
+        {
+          معلق: "bg-warning",
+          جزئى: "bg-info",
+          مكتمل: "bg-success",
+        }[data.paymentStatus] || "bg-secondary";
+
+      document.getElementById(
+        "requestPaymentStatus"
+      ).innerHTML = `<span class="badge ${paymentStatusBadgeClass}">${
+        data.paymentStatus || "غير محدد"
+      }</span>`;
+
+      // Add order type if not exists
+      if (!document.getElementById("requestType")) {
+        const dtType = document.createElement("dt");
+        dtType.className = "col-sm-4";
+        dtType.textContent = "نوع الطلب:";
+
+        const ddType = document.createElement("dd");
+        ddType.className = "col-sm-8";
+        ddType.id = "requestType";
+
+        // Insert after device type
+        const deviceTypeDt = Array.from(dlRow.querySelectorAll("dt")).find(
+          (dt) => dt.textContent.includes("نوع الجهاز")
+        );
+        if (deviceTypeDt) {
+          const deviceTypeDd = deviceTypeDt.nextElementSibling;
+          dlRow.insertBefore(dtType, deviceTypeDd.nextElementSibling);
+          dlRow.insertBefore(
+            ddType,
+            deviceTypeDd.nextElementSibling.nextElementSibling
+          );
+        } else {
+          // If not found, append to the end
+          dlRow.appendChild(dtType);
+          dlRow.appendChild(ddType);
+        }
+      }
+
+      // Set order type with badge
+      document.getElementById("requestType").innerHTML = `<span class="badge ${
+        data.type === "صيانة" ? "bg-info" : "bg-primary"
+      }">${data.type || "غير محدد"}</span>`;
+
+      // Update technicians display
+      document.getElementById("requestTechnician").innerHTML =
+        data.technicians && data.technicians.length > 0
+          ? data.technicians
+              .map(
+                (t) =>
+                  `<span class="badge bg-light text-dark border me-1 mb-1"><i class="fas fa-user-cog me-1"></i>${t.name}</span>`
+              )
+              .join("")
+          : '<span class="text-muted">غير معين</span>';
+
+      // Add total price if not exists
+      if (!document.getElementById("requestTotalPrice")) {
+        const dtTotal = document.createElement("dt");
+        dtTotal.className = "col-sm-4";
+        dtTotal.textContent = "السعر الإجمالي:";
+
+        const ddTotal = document.createElement("dd");
+        ddTotal.className = "col-sm-8";
+        ddTotal.id = "requestTotalPrice";
+
+        // Insert after estimated cost
+        const estimatedCostDt = Array.from(dlRow.querySelectorAll("dt")).find(
+          (dt) => dt.textContent.includes("التكلفة المقدرة")
+        );
+        if (estimatedCostDt) {
+          const estimatedCostDd = estimatedCostDt.nextElementSibling;
+          dlRow.insertBefore(dtTotal, estimatedCostDd.nextElementSibling);
+          dlRow.insertBefore(
+            ddTotal,
+            estimatedCostDd.nextElementSibling.nextElementSibling
+          );
+        } else {
+          // If not found, append to the end
+          dlRow.appendChild(dtTotal);
+          dlRow.appendChild(ddTotal);
+        }
+      }
+
+      // Set total price value
+      document.getElementById("requestTotalPrice").textContent = data.totalPrice
+        ? data.totalPrice.toLocaleString() + " ريال"
+        : "غير محدد";
+
+      // Update estimated cost
+      document.getElementById("requestEstimatedCost").textContent =
+        data.estimatedCost
+          ? data.estimatedCost.toLocaleString() + " ريال"
+          : "غير محدد";
+
+      // Format description with styling
+      document.getElementById("requestDescription").innerHTML = data.description
+        ? `<div class="p-2 bg-light border-start border-3 border-primary rounded">${data.description}</div>`
+        : '<span class="text-muted">لا يوجد</span>';
+
+      // Update parts used with a table
       let partsHtml = "";
-      if (data.partsUsed && data.partsUsed.length > 0) {
-        partsHtml = "<ul>";
-        data.partsUsed.forEach((part) => {
-          partsHtml += `<li>${
-            part.partId ? part.partId.name : "غير معروف"
-          } - الكمية: ${part.quantity}</li>`;
+      if (data.items && data.items.length > 0) {
+        partsHtml =
+          '<div class="table-responsive mt-2"><table class="table table-sm table-bordered">';
+        partsHtml +=
+          '<thead class="table-light"><tr><th>اسم القطعة</th><th>الكمية</th><th>السعر</th><th>المجموع</th></tr></thead><tbody>';
+        data.items.forEach((item) => {
+          const itemTotal = item.quantity * item.price;
+          partsHtml += `<tr>
+            <td>${item.itemId ? item.itemId.name : "غير معروف"}</td>
+            <td>${item.quantity}</td>
+            <td>${item.price.toLocaleString()} ريال</td>
+            <td>${itemTotal.toLocaleString()} ريال</td>
+          </tr>`;
         });
-        partsHtml += "</ul>";
+        partsHtml += "</tbody></table></div>";
       } else {
-        partsHtml = "لا يوجد";
+        partsHtml = '<span class="text-muted">لا يوجد</span>';
       }
       document.getElementById("requestPartsUsed").innerHTML = partsHtml;
 
-      let notesHtml = "";
-      if (data.notes && data.notes.length > 0) {
-        notesHtml = "<ul>";
-        data.notes.forEach((note) => {
-          notesHtml += `<li>${
-            note.content
-          } <small class="text-muted">(${new Date(
-            note.createdAt
-          ).toLocaleString("ar-EG")})</small></li>`;
-        });
-        notesHtml += "</ul>";
-      } else {
-        notesHtml = "لا يوجد";
-      }
-      document.getElementById("requestNotes").innerHTML = notesHtml;
+      // Update notes with styling
+      document.getElementById("requestNotes").innerHTML = data.notes
+        ? `<div class="p-2 bg-light border-start border-3 border-success rounded">${data.notes}</div>`
+        : '<span class="text-muted">لا يوجد</span>';
 
+      // Show the modal
       const modalEl = document.getElementById("viewRequestModal");
       const modal = new bootstrap.Modal(modalEl);
       modal.show();
@@ -638,34 +823,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       alert("حدث خطأ أثناء جلب تفاصيل الطلب: " + error.message);
     }
   };
-
-  window.editRequest = async (id) => {
-    try {
-      const res = await fetch(API + "/orders/" + id);
-      if (!res.ok) throw new Error("Request not found");
-      const data = await res.json();
-      const newStatus = prompt("تحديث الحالة:", data.status);
-      if (newStatus) {
-        const updatedRequest = { ...data, status: newStatus };
-        const putRes = await fetch(API + "/orders/" + id, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(updatedRequest),
-        });
-        if (!putRes.ok) throw new Error("Failed to update orders request");
-        const updatedData = await putRes.json();
-        console.log("Maintenance request updated:", updatedData);
-        const index = requests.findIndex((req) => req._id === id);
-        if (index !== -1) {
-          requests[index] = updatedData;
-          renderTable(requests);
-        }
-      }
-    } catch (error) {
-      console.error("Error updating orders request:", error);
-    }
-  };
-
   window.deleteRequest = async (id) => {
     if (confirm("هل أنت متأكد من حذف هذا الطلب؟")) {
       try {
@@ -680,6 +837,247 @@ document.addEventListener("DOMContentLoaded", async () => {
       } catch (error) {
         console.error("Error deleting orders request:", error);
       }
+    }
+  };
+  window.editRequest = async (id) => {
+    console.log(id);
+    try {
+      // Fetch the current order data using fetchWithErrorHandling
+      const { success, data, error } = await fetchWithErrorHandling(
+        API + "/orders/" + id
+      );
+      if (!success) throw new Error(error);
+
+      // Create edit modal HTML
+      const modalHTML = `
+        <div class="modal fade" id="editRequestModal" tabindex="-1" aria-labelledby="editRequestModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="editRequestModalLabel">تعديل الطلب #${
+                  data.orderId
+                }</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+              </div>
+              <div class="modal-body">
+                <form id="editRequestForm">
+                  <div class="row g-3">
+                    <!-- Basic Information -->
+                    <div class="col-md-6">
+                      <label for="editDeviceType" class="form-label">نوع الجهاز</label>
+                      <input type="text" class="form-control" id="editDeviceType" value="${
+                        data.deviceType || ""
+                      }" required>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="editPriority" class="form-label">الأولوية</label>
+                      <select class="form-select" id="editPriority" required>
+                        <option value="عالية" ${
+                          data.priority === "عالية" ? "selected" : ""
+                        }>عالية</option>
+                        <option value="متوسطة" ${
+                          data.priority === "متوسطة" ? "selected" : ""
+                        }>متوسطة</option>
+                        <option value="منخفضة" ${
+                          data.priority === "منخفضة" ? "selected" : ""
+                        }>منخفضة</option>
+                      </select>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="editStatus" class="form-label">الحالة</label>
+                      <select class="form-select" id="editStatus" required>
+                        <option value="جديد" ${
+                          data.status === "جديد" ? "selected" : ""
+                        }>جديد</option>
+                        <option value="قيد المعالجة" ${
+                          data.status === "قيد المعالجة" ? "selected" : ""
+                        }>قيد المعالجة</option>
+                        <option value="مكتمل" ${
+                          data.status === "مكتمل" ? "selected" : ""
+                        }>مكتمل</option>
+                        <option value="ملغي" ${
+                          data.status === "ملغي" ? "selected" : ""
+                        }>ملغي</option>
+                      </select>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="editType" class="form-label">نوع الطلب</label>
+                      <select class="form-select" id="editType" required>
+                        <option value="صيانة" ${
+                          data.type === "صيانة" ? "selected" : ""
+                        }>صيانة</option>
+                        <option value="تركيب" ${
+                          data.type === "تركيب" ? "selected" : ""
+                        }>تركيب</option>
+                      </select>
+                    </div>
+                    <!-- Financial Info -->
+                    <div class="col-md-6">
+                      <label for="editEstimatedCost" class="form-label">التكلفة المقدرة</label>
+                      <div class="input-group">
+                        <input type="number" class="form-control" id="editEstimatedCost" value="${
+                          data.estimatedCost || 0
+                        }" min="0">
+                        <span class="input-group-text">ريال</span>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="editTotalPrice" class="form-label">السعر الإجمالي</label>
+                      <div class="input-group">
+                        <input type="number" class="form-control" id="editTotalPrice" value="${
+                          data.totalPrice || 0
+                        }" min="0" required>
+                        <span class="input-group-text">ريال</span>
+                      </div>
+                    </div>
+                    <!-- Dates -->
+                    <div class="col-md-6">
+                      <label for="editScheduledDate" class="form-label">الموعد المجدول</label>
+                      <input type="datetime-local" class="form-control" id="editScheduledDate" 
+                        value="${
+                          data.scheduledDate
+                            ? new Date(data.scheduledDate)
+                                .toISOString()
+                                .slice(0, 16)
+                            : ""
+                        }">
+                    </div>
+                    <div class="col-md-6">
+                      <label for="editCompletionDate" class="form-label">تاريخ الإكمال</label>
+                      <input type="datetime-local" class="form-control" id="editCompletionDate" 
+                        value="${
+                          data.completionDate
+                            ? new Date(data.completionDate)
+                                .toISOString()
+                                .slice(0, 16)
+                            : ""
+                        }">
+                    </div>
+                    <!-- Payment Status -->
+                    <div class="col-md-6">
+                      <label for="editPaymentStatus" class="form-label">حالة الدفع</label>
+                      <select class="form-select" id="editPaymentStatus" required>
+                        <option value="معلق" ${
+                          data.paymentStatus === "معلق" ? "selected" : ""
+                        }>معلق</option>
+                        <option value="جزئى" ${
+                          data.paymentStatus === "جزئى" ? "selected" : ""
+                        }>جزئى</option>
+                        <option value="مكتمل" ${
+                          data.paymentStatus === "مكتمل" ? "selected" : ""
+                        }>مكتمل</option>
+                      </select>
+                    </div>
+                    <!-- Description and Notes -->
+                    <div class="col-12">
+                      <label for="editDescription" class="form-label">الوصف</label>
+                      <textarea class="form-control" id="editDescription" rows="3">${
+                        data.description || ""
+                      }</textarea>
+                    </div>
+                    <div class="col-12">
+                      <label for="editNotes" class="form-label">الملاحظات</label>
+                      <textarea class="form-control" id="editNotes" rows="3">${
+                        data.notes || ""
+                      }</textarea>
+                    </div>
+                  </div>
+                </form>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" id="saveEditRequest">حفظ التغييرات</button>
+              </div>
+            </div>
+          </div>
+        </div>`;
+
+      // Add modal to document if it doesn't exist
+      let modalElement = document.getElementById("editRequestModal");
+      if (modalElement) {
+        modalElement.remove();
+      }
+      document.body.insertAdjacentHTML("beforeend", modalHTML);
+
+      // Initialize the modal
+      const modal = new bootstrap.Modal(
+        document.getElementById("editRequestModal")
+      );
+      modal.show();
+
+      // Handle form submission
+      document
+        .getElementById("saveEditRequest")
+        .addEventListener("click", async () => {
+          try {
+            // Gather form data
+            const updatedOrder = {
+              deviceType: document.getElementById("editDeviceType").value,
+              priority: document.getElementById("editPriority").value,
+              status: document.getElementById("editStatus").value,
+              type: document.getElementById("editType").value,
+              estimatedCost:
+                parseFloat(
+                  document.getElementById("editEstimatedCost").value
+                ) || 0,
+              totalPrice:
+                parseFloat(document.getElementById("editTotalPrice").value) ||
+                0,
+              paymentStatus: document.getElementById("editPaymentStatus").value,
+              description: document.getElementById("editDescription").value,
+              notes: document.getElementById("editNotes").value,
+            };
+
+            // Add dates if they have values
+            const scheduledDate =
+              document.getElementById("editScheduledDate").value;
+            if (scheduledDate) {
+              updatedOrder.scheduledDate = new Date(scheduledDate);
+            }
+            const completionDate =
+              document.getElementById("editCompletionDate").value;
+            if (completionDate) {
+              updatedOrder.completionDate = new Date(completionDate);
+            }
+
+            // Preserve fields that aren't editable in the form
+            updatedOrder.orderId = data.orderId;
+            updatedOrder.customerId = data.customerId;
+            updatedOrder.technicians = data.technicians;
+            updatedOrder.items = data.items;
+
+            // Send update request using fetchWithErrorHandling
+            const { success: updateSuccess, error: updateError } =
+              await fetchWithErrorHandling(`${API}/orders/${id}`, {
+                method: "PUT",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify(updatedOrder),
+              });
+
+            if (!updateSuccess) {
+              throw new Error(updateError || "حدث خطأ أثناء تحديث الطلب");
+            }
+
+            // Hide modal
+            modal.hide();
+
+            // Show success message
+            showErrorMessage("تم تحديث الطلب بنجاح", true);
+
+            // Refresh the orders table or view if needed
+            if (typeof loadOrders === "function") {
+              loadOrders();
+            }
+          } catch (error) {
+            console.error("Error updating order:", error);
+            showErrorMessage(`حدث خطأ أثناء تحديث الطلب: ${error.message}`);
+          }
+        });
+    } catch (error) {
+      console.error("Error initiating edit:", error);
+      showErrorMessage(`حدث خطأ أثناء تحضير نموذج التعديل: ${error.message}`);
     }
   };
 });

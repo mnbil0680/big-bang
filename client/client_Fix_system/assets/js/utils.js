@@ -19,16 +19,16 @@ export async function fetchWithErrorHandling(url, options = {}) {
     return { success: false, error: error.message };
   }
 }
-
-export function showErrorMessage(message) {
+export function showErrorMessage(message, isSuccess = false) {
   // Create the alert element using Bootstrap classes
   const alertDiv = document.createElement("div");
-  alertDiv.className =
-    "alert alert-danger position-fixed top-0 start-50 translate-middle-x mt-3";
-  alertDiv.style.zIndex = 1050; // Ensure it appears above other elements
+  alertDiv.className = `alert ${
+    isSuccess ? "alert-success" : "alert-danger"
+  } position-fixed top-0 start-50 translate-middle-x mt-3`;
+  alertDiv.style.zIndex = 1060; // Ensure it appears above other elements
   alertDiv.textContent = message;
 
-  // Append alert to the body (or a specific container if needed)
+  // Append alert to the body
   document.body.appendChild(alertDiv);
 
   // Use GSAP to animate the alert sliding down into view
