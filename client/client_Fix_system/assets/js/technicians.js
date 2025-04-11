@@ -1,4 +1,4 @@
-const API = "http://localhost:3000";
+const API = window.SERVER_URI || "http://localhost:3000";
 let technicianIdToDelete = null;
 function showMessage(message, type = "danger") {
   // Bootstrap alert classes

@@ -1,4 +1,4 @@
-const API = "http://localhost:3000";
+const API = window.SERVER_URI || "http://localhost:3000";
 function voucherSystem() {
   return {
     activeTab: "new",

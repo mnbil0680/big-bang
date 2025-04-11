@@ -1,29 +1,32 @@
-const API_BASE_URL = "http://localhost:3000"; // Base URL for the backend server
+const API_BASE_URL = window.SERVER_URI || "http://localhost:3000"; // Base URL for the backend server
 const { jsPDF } = window.jspdf; // This line would fail without the library
 // Display error messages as toast notifications
 function showError(message, duration = 5000) {
-  const toastContainer = document.getElementById("toast-container") || createToastContainer();
-  
+  const toastContainer =
+    document.getElementById("toast-container") || createToastContainer();
+
   // Create and configure toast element
   const toast = Object.assign(document.createElement("div"), {
-      className: "toast toast-error",
-      innerHTML: `
+    className: "toast toast-error",
+    innerHTML: `
           <span>${message?.replace(/\n/g, "<br>") || "حدث خطأ غير معروف"}</span>
           <button class="toast-close" onclick="this.parentElement.remove()">×</button>
-      `
+      `,
   });
 
   // Efficient DOM manipulation
   requestAnimationFrame(() => {
-      toastContainer.appendChild(toast);
-      requestAnimationFrame(() => toast.classList.add("show"));
+    toastContainer.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add("show"));
   });
 
   // Cleanup using single timeout
   const timeout = setTimeout(() => {
-      toast.classList.remove("show");
-      toast.addEventListener("transitionend", () => toast.remove(), { once: true });
-      clearTimeout(timeout);
+    toast.classList.remove("show");
+    toast.addEventListener("transitionend", () => toast.remove(), {
+      once: true,
+    });
+    clearTimeout(timeout);
   }, duration);
 }
 
@@ -35,69 +38,72 @@ function createToastContainer() {
 
   // Create and configure container with enhanced attributes
   const container = Object.assign(document.createElement("div"), {
-      id: "toast-container",
-      className: "toast-container",
-      role: "alert",
-      "aria-live": "polite",
-      "aria-atomic": "true"
+    id: "toast-container",
+    className: "toast-container",
+    role: "alert",
+    "aria-live": "polite",
+    "aria-atomic": "true",
   });
 
   // Set container styles for better positioning and stacking
   Object.assign(container.style, {
-      position: "fixed",
-      top: "20px",
-      left: "50%",
-      transform: "translateX(-50%)",
-      zIndex: "9999",
-      maxHeight: "100vh",
-      overflowY: "auto",
-      pointerEvents: "none" // Allow clicking through container
+    position: "fixed",
+    top: "20px",
+    left: "50%",
+    transform: "translateX(-50%)",
+    zIndex: "9999",
+    maxHeight: "100vh",
+    overflowY: "auto",
+    pointerEvents: "none", // Allow clicking through container
   });
 
   // Add container to DOM safely
   try {
-      document.body.appendChild(container);
+    document.body.appendChild(container);
   } catch (error) {
-      console.error("Failed to create toast container:", error);
-      // Fallback to body if available, otherwise return null
-      return document.querySelector(".toast-container") || null;
+    console.error("Failed to create toast container:", error);
+    // Fallback to body if available, otherwise return null
+    return document.querySelector(".toast-container") || null;
   }
 
   // Enable pointer events only for toast messages
-  container.addEventListener('mouseover', () => {
-      container.style.pointerEvents = 'auto';
+  container.addEventListener("mouseover", () => {
+    container.style.pointerEvents = "auto";
   });
-  container.addEventListener('mouseleave', () => {
-      container.style.pointerEvents = 'none';
+  container.addEventListener("mouseleave", () => {
+    container.style.pointerEvents = "none";
   });
 
   return container;
 }
 
 function clearError() {
-
   const toastContainer = document.getElementById("toast-container");
   if (!toastContainer) return;
 
   // Get all toast elements
-  const toasts = toastContainer.querySelectorAll('.toast');
-  
+  const toasts = toastContainer.querySelectorAll(".toast");
+
   // If no toasts, exit early
   if (!toasts.length) return;
 
   // Remove toasts with animation
-  toasts.forEach(toast => {
-      toast.classList.remove('show');
-      toast.addEventListener('transitionend', () => {
-          toast.remove();
-      }, { once: true });
+  toasts.forEach((toast) => {
+    toast.classList.remove("show");
+    toast.addEventListener(
+      "transitionend",
+      () => {
+        toast.remove();
+      },
+      { once: true }
+    );
   });
 
   // Clean up container after all animations
   setTimeout(() => {
-      if (toastContainer.children.length === 0) {
-          toastContainer.innerHTML = '';
-      }
+    if (toastContainer.children.length === 0) {
+      toastContainer.innerHTML = "";
+    }
   }, 300); // Match this with your CSS transition duration
 }
 
@@ -271,10 +277,10 @@ function updateTotals() {
     finalTotal.toLocaleString("ar-SA");
 }
 function formatPrice(input) {
-  let value = input.value.replace(/[^\d.]/g, '');
+  let value = input.value.replace(/[^\d.]/g, "");
   if (value) {
-      value = parseFloat(value).toLocaleString('ar-SA');
-      input.value = value;
+    value = parseFloat(value).toLocaleString("ar-SA");
+    input.value = value;
   }
 }
 function addNewRow() {
@@ -309,13 +315,14 @@ function addNewRow() {
     .querySelector(".tax-input")
     .addEventListener("input", () => updateRowTotal(newRow));
 
-    newRow.querySelector('.price-input').addEventListener('blur', function() {
-      formatPrice(this);
-      updateRowTotal(this);
+  newRow.querySelector(".price-input").addEventListener("blur", function () {
+    formatPrice(this);
+    updateRowTotal(this);
   });
-  newRow.querySelector('.qty-input').value = '1';
-    newRow.querySelector('.price-input').value = '0';
-    newRow.querySelector('.tax-input').value = document.getElementById('vat-percentage').textContent;
+  newRow.querySelector(".qty-input").value = "1";
+  newRow.querySelector(".price-input").value = "0";
+  newRow.querySelector(".tax-input").value =
+    document.getElementById("vat-percentage").textContent;
 
   // Append the new row to the table body
   tableBody.appendChild(newRow);
@@ -419,99 +426,95 @@ function updateWatermark(text) {
 async function exportToPDF() {
   const printControls = document.querySelector(".print-controls");
   const container = document.querySelector(".container");
-  
+
   try {
-      // Hide controls and show loading indicator
-      printControls.style.display = "none";
-      document.body.style.cursor = 'wait';
-      
-      // Optimize canvas rendering
-      const canvas = await html2canvas(container, {
-          scale: 2,
-          useCORS: true,
-          backgroundColor: "#ffffff",
-          logging: false, // Disable logging for better performance
-          allowTaint: false,
-          imageTimeout: 15000, // 15 seconds timeout for images
-          removeContainer: true, // Clean up temporary elements
-          letterRendering: true, // Better text quality
-      });
+    // Hide controls and show loading indicator
+    printControls.style.display = "none";
+    document.body.style.cursor = "wait";
 
-      // Initialize jsPDF with optimal settings
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF({
-          orientation: 'portrait',
-          unit: 'mm',
-          format: 'a4',
-          compress: true, // Enable compression
-          precision: 16 // Higher precision for better text positioning
-      });
+    // Optimize canvas rendering
+    const canvas = await html2canvas(container, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#ffffff",
+      logging: false, // Disable logging for better performance
+      allowTaint: false,
+      imageTimeout: 15000, // 15 seconds timeout for images
+      removeContainer: true, // Clean up temporary elements
+      letterRendering: true, // Better text quality
+    });
 
-      // Configure PDF settings
-      pdf.addFont("Amiri-Regular.ttf", "Amiri", "normal");
-      pdf.setFont("Amiri");
-      pdf.setLanguage("ar");
-      pdf.setR2L(true);
+    // Initialize jsPDF with optimal settings
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
+      compress: true, // Enable compression
+      precision: 16, // Higher precision for better text positioning
+    });
 
-      // Calculate dimensions with better precision
-      const pageWidth = 210;
-      const pageHeight = 297;
-      const margin = 10;
-      const contentWidth = pageWidth - (2 * margin);
-      const contentHeight = (canvas.height * contentWidth) / canvas.width;
-      
-      // Convert canvas to high-quality JPEG
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+    // Configure PDF settings
+    pdf.addFont("Amiri-Regular.ttf", "Amiri", "normal");
+    pdf.setFont("Amiri");
+    pdf.setLanguage("ar");
+    pdf.setR2L(true);
 
-      // Calculate number of pages needed
-      const totalPages = Math.ceil(contentHeight / (pageHeight - (2 * margin)));
+    // Calculate dimensions with better precision
+    const pageWidth = 210;
+    const pageHeight = 297;
+    const margin = 10;
+    const contentWidth = pageWidth - 2 * margin;
+    const contentHeight = (canvas.height * contentWidth) / canvas.width;
 
-      // Add pages with content
-      for (let i = 0; i < totalPages; i++) {
-          if (i > 0) pdf.addPage();
+    // Convert canvas to high-quality JPEG
+    const imgData = canvas.toDataURL("image/jpeg", 0.95);
 
-          const position = -i * (pageHeight - (2 * margin));
-          
-          pdf.addImage(
-              imgData,
-              'JPEG',
-              margin,
-              position + margin,
-              contentWidth,
-              contentHeight,
-              undefined,
-              'FAST' // Use fast image processing
-          );
+    // Calculate number of pages needed
+    const totalPages = Math.ceil(contentHeight / (pageHeight - 2 * margin));
 
-          // Add page number if multiple pages
-          if (totalPages > 1) {
-              pdf.setFontSize(8);
-              pdf.text(
-                  `${i + 1} / ${totalPages}`,
-                  pageWidth / 2,
-                  pageHeight - 5,
-                  { align: 'center' }
-              );
-          }
+    // Add pages with content
+    for (let i = 0; i < totalPages; i++) {
+      if (i > 0) pdf.addPage();
+
+      const position = -i * (pageHeight - 2 * margin);
+
+      pdf.addImage(
+        imgData,
+        "JPEG",
+        margin,
+        position + margin,
+        contentWidth,
+        contentHeight,
+        undefined,
+        "FAST" // Use fast image processing
+      );
+
+      // Add page number if multiple pages
+      if (totalPages > 1) {
+        pdf.setFontSize(8);
+        pdf.text(`${i + 1} / ${totalPages}`, pageWidth / 2, pageHeight - 5, {
+          align: "center",
+        });
       }
+    }
 
-      // Generate unique filename with timestamp
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const filename = `عرض_سعر_${timestamp}.pdf`;
+    // Generate unique filename with timestamp
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const filename = `عرض_سعر_${timestamp}.pdf`;
 
-      // Save PDF with optimized settings
-      pdf.save(filename, { returnPromise: true });
+    // Save PDF with optimized settings
+    pdf.save(filename, { returnPromise: true });
 
-      // Show success message
-      showSuccess('تم تصدير PDF بنجاح!');
-
+    // Show success message
+    showSuccess("تم تصدير PDF بنجاح!");
   } catch (error) {
-      console.error("PDF Export Error:", error);
-      showError(`فشل تصدير PDF: ${error.message}`);
+    console.error("PDF Export Error:", error);
+    showError(`فشل تصدير PDF: ${error.message}`);
   } finally {
-      // Restore UI state
-      printControls.style.display = "flex";
-      document.body.style.cursor = 'default';
+    // Restore UI state
+    printControls.style.display = "flex";
+    document.body.style.cursor = "default";
   }
 }
 
