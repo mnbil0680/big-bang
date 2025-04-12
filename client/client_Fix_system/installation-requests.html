@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="نظام إدارة الصيانة والتركيب - إدارة طلبات التركيب بكفاءة"
+      content="نظام إدارة طلبات التركيب - إدارة طلبات التركيب بكفاءة"
     />
     <meta name="author" content="شركة الخبراء للصيانة والتركيبات" />
-    <title>نظام إدارة الصيانة والتركيب - طلبات التركيب</title>
+    <title>نظام إدارة طلبات التركيب</title>
     <link
       rel="shortcut icon"
       href="assets/img/favicon.ico"
@@ -21,6 +21,10 @@
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
     <link rel="stylesheet" href="assets/css/styles.css" />
     <style>
@@ -88,11 +92,10 @@
   </head>
   <body>
     <script>
-      window.SERVER_URI = "https://big-bang-production.up.railway.app";
+      window.SERVER_URI = "http://localhost:3000";
     </script>
     <div class="modal-overlay"></div>
     <div class="layout-container">
-      <!-- الشريط الجانبي -->
       <script src="assets/js/asideInclud.js"></script>
       <div class="main-content">
         <div id="navbar"></div>
@@ -107,11 +110,9 @@
                 data-bs-toggle="modal"
                 data-bs-target="#addInstallationRequestModal"
               >
-                <i class="bi bi-plus-circle"></i>
-                <span>إضافة طلب تركيب جديد</span>
+                <i class="bi bi-plus-circle"></i> <span>إضافة طلب جديد</span>
               </button>
             </div>
-
             <div class="card mb-4">
               <div class="card-body">
                 <div class="row g-3">
@@ -161,7 +162,6 @@
                 </div>
               </div>
             </div>
-
             <div class="card">
               <div
                 class="card-header d-flex justify-content-between align-items-center"
@@ -182,14 +182,14 @@
                     aria-labelledby="exportDropdown"
                   >
                     <li>
-                      <a class="dropdown-item" href="#" data-export="excel">
-                        <i class="bi bi-file-earmark-excel me-2"></i>Excel
-                      </a>
+                      <a class="dropdown-item" href="#" data-export="excel"
+                        ><i class="bi bi-file-earmark-excel me-2"></i>Excel</a
+                      >
                     </li>
                     <li>
-                      <a class="dropdown-item" href="#" data-export="print">
-                        <i class="bi bi-printer me-2"></i>طباعة
-                      </a>
+                      <a class="dropdown-item" href="#" data-export="print"
+                        ><i class="bi bi-printer me-2"></i>طباعة</a
+                      >
                     </li>
                   </ul>
                 </div>
@@ -216,23 +216,7 @@
                   </table>
                 </div>
                 <nav aria-label="Pagination" class="mt-3">
-                  <ul class="pagination justify-content-center">
-                    <li class="page-item disabled">
-                      <a class="page-link" href="#">السابق</a>
-                    </li>
-                    <li class="page-item active">
-                      <a class="page-link" href="#">1</a>
-                    </li>
-                    <li class="page-item">
-                      <a class="page-link" href="#">2</a>
-                    </li>
-                    <li class="page-item">
-                      <a class="page-link" href="#">3</a>
-                    </li>
-                    <li class="page-item">
-                      <a class="page-link" href="#">التالي</a>
-                    </li>
-                  </ul>
+                  <ul class="pagination justify-content-center"></ul>
                 </nav>
               </div>
             </div>
@@ -240,7 +224,6 @@
         </main>
       </div>
     </div>
-
     <!-- Modal for Adding an Installation Request -->
     <div
       class="modal fade"
@@ -263,117 +246,90 @@
             ></button>
           </div>
           <div class="modal-body">
-            <!-- Inline CSS for custom searchable inputs -->
-            <style>
-              .custom-search-input {
-                font-size: 0.9rem;
-                padding: 0.375rem 0.75rem;
-              }
-              .custom-dropdown .dropdown-item {
-                font-size: 0.9rem;
-                padding: 0.25rem 0.5rem;
-                cursor: pointer;
-              }
-              .custom-dropdown .dropdown-item:hover {
-                background-color: #f0f0f0;
-              }
-              .custom-dropdown {
-                font-size: 0.9rem;
-              }
-            </style>
-            <form id="addRequestForm" class="needs-validation" novalidate>
-              <!-- Custom Searchable Customer Input -->
+            <form
+              id="addInstallationRequestForm"
+              class="needs-validation"
+              novalidate
+            >
+              <!-- Searchable Customer Input -->
               <div class="mb-3">
-                <label for="customerSearchInput" class="form-label"
+                <label for="installationCustomerSearchInput" class="form-label"
                   >اسم العميل <span class="text-danger">*</span></label
                 >
                 <input
                   type="text"
-                  id="customerSearchInput"
+                  id="installationCustomerSearchInput"
                   class="form-control custom-search-input"
                   placeholder="ابحث عن العميل..."
                   autocomplete="off"
                   required
                 />
-                <input type="hidden" id="customerId" />
+                <input type="hidden" id="installationCustomerId" />
                 <div
-                  id="customerDropdown"
+                  id="installationCustomerDropdown"
                   class="dropdown-menu custom-dropdown"
                   style="width: 100%; max-height: 200px; overflow-y: auto"
                 ></div>
-                <div class="invalid-feedback">يرجى اختيار العميل</div>
               </div>
-              <!-- Custom Searchable Technician Input -->
+
+              <!-- Searchable Technician Input -->
               <div class="mb-3">
-                <label for="technicianSearchInput" class="form-label"
-                  >الفني المسؤول</label
+                <label
+                  for="installationTechnicianSearchInput"
+                  class="form-label"
+                  >الفنيين المسؤولين <span class="text-danger">*</span></label
                 >
                 <input
                   type="text"
-                  id="technicianSearchInput"
+                  id="installationTechnicianSearchInput"
                   class="form-control custom-search-input"
                   placeholder="ابحث عن الفني..."
                   autocomplete="off"
+                  required
                 />
-                <input type="hidden" id="technicianId" />
                 <div
-                  id="technicianDropdown"
+                  id="installationTechnicianDropdown"
                   class="dropdown-menu custom-dropdown"
                   style="width: 100%; max-height: 200px; overflow-y: auto"
                 ></div>
-                <div class="invalid-feedback">يرجى اختيار الفني</div>
+                <div
+                  id="installationSelectedTechnicians"
+                  class="mt-2 d-flex flex-wrap gap-2"
+                ></div>
               </div>
-              <!-- Other Form Fields -->
+
+              <!-- Form Fields -->
               <div class="mb-3">
-                <label for="deviceType" class="form-label"
+                <label for="installationDeviceType" class="form-label"
                   >نوع الجهاز <span class="text-danger">*</span></label
                 >
                 <input
                   type="text"
                   class="form-control"
-                  id="deviceType"
+                  id="installationDeviceType"
                   required
                 />
-                <div class="invalid-feedback">يرجى إدخال نوع الجهاز</div>
               </div>
               <div class="mb-3">
-                <label for="priority" class="form-label"
+                <label for="installationPriority" class="form-label"
                   >الأولوية <span class="text-danger">*</span></label
                 >
-                <select class="form-select" id="priority" required>
+                <select class="form-select" id="installationPriority" required>
                   <option value="">اختر...</option>
                   <option value="عالية">عالية</option>
                   <option value="متوسطة">متوسطة</option>
                   <option value="منخفضة">منخفضة</option>
                 </select>
-                <div class="invalid-feedback">يرجى اختيار الأولوية</div>
               </div>
               <div class="mb-3">
-                <label for="description" class="form-label">الوصف</label>
+                <label for="installationDescription" class="form-label"
+                  >الوصف</label
+                >
                 <textarea
                   class="form-control"
-                  id="description"
+                  id="installationDescription"
                   rows="3"
                 ></textarea>
-              </div>
-              <!-- Optional Fields for Installations -->
-              <div class="mb-3">
-                <label for="estimatedCost" class="form-label"
-                  >التكلفة المقدرة</label
-                >
-                <input
-                  type="number"
-                  class="form-control"
-                  id="estimatedCost"
-                  min="0"
-                  placeholder="مثال: 500"
-                />
-              </div>
-              <div class="mb-3">
-                <label for="scheduledDate" class="form-label"
-                  >تاريخ التركيب</label
-                >
-                <input type="date" class="form-control" id="scheduledDate" />
               </div>
             </form>
           </div>
@@ -385,109 +341,19 @@
             >
               إلغاء
             </button>
-            <button type="submit" form="addRequestForm" class="btn btn-primary">
+            <button
+              type="submit"
+              form="addInstallationRequestForm"
+              class="btn btn-primary"
+            >
               حفظ
             </button>
           </div>
         </div>
       </div>
     </div>
-    <!-- View Installation Request Modal -->
-    <div
-      class="modal fade"
-      id="viewRequestModal"
-      tabindex="-1"
-      aria-labelledby="viewRequestModalLabel"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="viewRequestModalLabel">تفاصيل الطلب</h5>
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="modal"
-              aria-label="إغلاق"
-            ></button>
-          </div>
-          <div class="modal-body">
-            <dl class="row">
-              <dt class="col-sm-4">رقم الطلب:</dt>
-              <dd class="col-sm-8" id="requestNumber">N/A</dd>
-              <dt class="col-sm-4">العميل:</dt>
-              <dd class="col-sm-8" id="requestCustomer">غير متوفر</dd>
-              <dt class="col-sm-4">نوع الجهاز:</dt>
-              <dd class="col-sm-8" id="requestDeviceType">غير محدد</dd>
-              <dt class="col-sm-4">الأولوية:</dt>
-              <dd class="col-sm-8" id="requestPriority">غير محدد</dd>
-              <dt class="col-sm-4">الحالة:</dt>
-              <dd class="col-sm-8" id="requestStatus">غير محدد</dd>
-              <dt class="col-sm-4">تاريخ الإنشاء:</dt>
-              <dd class="col-sm-8" id="requestCreatedDate">غير محدد</dd>
-              <dt class="col-sm-4">الفني المسؤول:</dt>
-              <dd class="col-sm-8" id="requestTechnician">غير معين</dd>
-              <dt class="col-sm-4">الوصف:</dt>
-              <dd class="col-sm-8" id="requestDescription">لا يوجد</dd>
-              <dt class="col-sm-4">التكلفة المقدرة:</dt>
-              <dd class="col-sm-8" id="requestEstimatedCost">غير محدد</dd>
-              <dt class="col-sm-4">تاريخ التركيب:</dt>
-              <dd class="col-sm-8" id="requestScheduledDate">غير محدد</dd>
-              <dt class="col-sm-4">الأجزاء المستخدمة:</dt>
-              <dd class="col-sm-8" id="requestPartsUsed">لا يوجد</dd>
-              <dt class="col-sm-4">الملاحظات:</dt>
-              <dd class="col-sm-8" id="requestNotes">لا يوجد</dd>
-            </dl>
-          </div>
-          <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              data-bs-dismiss="modal"
-            >
-              إغلاق
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.1/gsap.min.js"></script>
-    <script src="./assets/js/Installation.js" type="module"></script>
-    <script>
-      (function () {
-        function c() {
-          var b = a.contentDocument || a.contentWindow.document;
-          if (b) {
-            var d = b.createElement("script");
-            d.innerHTML =
-              "window.__CF$cv$params={r:'9275c3667e65bd0a',t:'MTc0MzE1MDYwMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
-            b.getElementsByTagName("head")[0].appendChild(d);
-          }
-        }
-        if (document.body) {
-          var a = document.createElement("iframe");
-          a.height = 1;
-          a.width = 1;
-          a.style.position = "absolute";
-          a.style.top = 0;
-          a.style.left = 0;
-          a.style.border = "none";
-          a.style.visibility = "hidden";
-          document.body.appendChild(a);
-          if ("loading" !== document.readyState) c();
-          else if (window.addEventListener)
-            document.addEventListener("DOMContentLoaded", c);
-          else {
-            var e = document.onreadystatechange || function () {};
-            document.onreadystatechange = function (b) {
-              e(b);
-              "loading" !== document.readyState &&
-                ((document.onreadystatechange = e), c());
-            };
-          }
-        }
-      })();
-    </script>
+    <script src="./assets/js/installation-requests.js" type="module"></script>
   </body>
 </html>

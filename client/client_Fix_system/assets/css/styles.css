@@ -56,7 +56,7 @@ a:hover {
 }
 
 .sidebar-content {
-  height: calc(100% - var(--topbar-height));
+  height: calc(100% - 2 * var(--topbar-height));
   overflow-x: hidden;
 }
 
@@ -187,7 +187,7 @@ toggle-sidebar-sm i {
 
 .sidebar-content {
   padding: 15px 0;
-  height: calc(100vh - var(--topbar-height));
+  height: calc(100vh - 2 * var(--topbar-height));
   overflow-y: auto;
 }
 
@@ -223,6 +223,25 @@ toggle-sidebar-sm i {
   align-items: center;
   justify-content: center;
   height: 100%;
+}
+.sidebar.collapsed .custom-hover > span {
+  display: none;
+}
+.custom-hover > span {
+  display: block;
+  margin-left: 10px;
+  font-size: 1.1rem;
+  color: var(--light);
+}
+.custom-hover {
+  background-color: #212529;
+  color: #ffffff;
+  border-radius: 0rem;
+  font-size: 1.5rem;
+  height: var(--topbar-height);
+}
+.custom-hover:hover {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 .sidebar-link {
   display: flex;

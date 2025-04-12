@@ -154,7 +154,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           </style>
         </head>
         <body>
-          <h2 class="text-center mb-4">طلبات الصيانة</h2>
+          <h2 class="text-center mb-4">طلبات تركيب</h2>
           ${table.outerHTML}
           <div class="text-center mt-4 no-print">
             <button onclick="window.print();" class="btn btn-primary">طباعة</button>
@@ -229,7 +229,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   try {
     const res = await fetch(API + "/orders");
     if (!res.ok) throw new Error("Failed to fetch orders requests");
-    requests = await res.json();
+
+    const allRequests = await res.json();
+    requests = allRequests.filter((req) => req.type === "صيانة");
+
     renderTable(requests);
     setupExportButtons();
   } catch (error) {
@@ -564,7 +567,7 @@ document.addEventListener("DOMContentLoaded", async () => {
               return isNaN(parsedValue) ? val : Math.max(val, parsedValue);
             }, 0) + 1
           ).padStart(4, "0")}`,
-          type: "صيانة",
+          type: "تركيب",
           customerId: document.getElementById("customerId").value,
           priority: document.getElementById("priority").value,
           deviceType: document.getElementById("deviceType").value,
