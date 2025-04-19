@@ -1,5 +1,6 @@
 const API_BASE_URL =
-  window.location.hostname === "localhost"
+  window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1"
     ? "http://localhost:3000"
     : window.SERVER_URI; // Base URL for the backend server
 const { jsPDF } = window.jspdf; // This line would fail without the library
