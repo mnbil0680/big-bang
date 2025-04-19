@@ -1,4 +1,7 @@
-const API = window.SERVER_URI || "http://localhost:3000";
+const API =
+  window.location.hostname === "localhost"
+    ? "http://localhost:3000"
+    : window.SERVER_URI;
 
 // Bootstrap alert message function (Arabic)
 function showMessage(message, type = "danger") {

@@ -1,5 +1,8 @@
 import { fetchWithErrorHandling, showErrorMessage } from "./utils.js";
-const API = window.SERVER_URI || "http://localhost:3000";
+const API =
+  window.location.hostname === "localhost"
+    ? "http://localhost:3000"
+    : window.SERVER_URI;
 // Existing global variables
 let requests = [];
 

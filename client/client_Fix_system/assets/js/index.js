@@ -1,6 +1,8 @@
 // dashboard.js
-const API_BASE_URL = window.SERVER_URI || "http://localhost:3000";
-
+const API_BASE_URL =
+  window.location.hostname === "localhost"
+    ? "http://localhost:3000"
+    : window.SERVER_URI;
 // Utility function to fetch data
 async function fetchData(endpoint) {
   try {

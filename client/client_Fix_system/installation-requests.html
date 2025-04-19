@@ -92,7 +92,7 @@
   </head>
   <body>
     <script>
-      window.SERVER_URI = "http://localhost:3000";
+      window.SERVER_URI = "https://big-bang-production.up.railway.app";
     </script>
     <div class="modal-overlay"></div>
     <div class="layout-container">
@@ -187,9 +187,14 @@
                       >
                     </li>
                     <li>
-                      <a class="dropdown-item" href="#" data-export="print"
-                        ><i class="bi bi-printer me-2"></i>طباعة</a
-                      >
+                      <a class="dropdown-item" href="#" data-export="csv">
+                        <i class="bi bi-file-earmark-spreadsheet me-2"></i>CSV
+                      </a>
+                    </li>
+                    <li>
+                      <a class="dropdown-item" href="#" data-export="print">
+                        <i class="bi bi-printer me-2"></i>طباعة
+                      </a>
                     </li>
                   </ul>
                 </div>
@@ -354,6 +359,42 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.1/gsap.min.js"></script>
     <script src="./assets/js/installation-requests.js" type="module"></script>
+    <script>
+      (function () {
+        function c() {
+          var b = a.contentDocument || a.contentWindow.document;
+          if (b) {
+            var d = b.createElement("script");
+            d.innerHTML =
+              "window.__CF$cv$params={r:'9275c3667e65bd0a',t:'MTc0MzE1MDYwMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
+            b.getElementsByTagName("head")[0].appendChild(d);
+          }
+        }
+        if (document.body) {
+          var a = document.createElement("iframe");
+          a.height = 1;
+          a.width = 1;
+          a.style.position = "absolute";
+          a.style.top = 0;
+          a.style.left = 0;
+          a.style.border = "none";
+          a.style.visibility = "hidden";
+          document.body.appendChild(a);
+          if ("loading" !== document.readyState) c();
+          else if (window.addEventListener)
+            document.addEventListener("DOMContentLoaded", c);
+          else {
+            var e = document.onreadystatechange || function () {};
+            document.onreadystatechange = function (b) {
+              e(b);
+              "loading" !== document.readyState &&
+                ((document.onreadystatechange = e), c());
+            };
+          }
+        }
+      })();
+    </script>
   </body>
 </html>

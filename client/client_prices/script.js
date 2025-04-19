@@ -1,4 +1,7 @@
-const API_BASE_URL = window.SERVER_URI || "http://localhost:3000"; // Base URL for the backend server
+const API_BASE_URL =
+  window.location.hostname === "localhost"
+    ? "http://localhost:3000"
+    : window.SERVER_URI; // Base URL for the backend server
 const { jsPDF } = window.jspdf; // This line would fail without the library
 // Display error messages as toast notifications
 function showError(message, duration = 5000) {

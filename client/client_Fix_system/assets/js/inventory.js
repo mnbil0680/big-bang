@@ -3,8 +3,10 @@ import { fetchWithErrorHandling, showErrorMessage } from "./utils.js";
 let currentEditId = null;
 
 // API Base URL
-const API_BASE_URL = window.SERVER_URI || "http://localhost:3000";
-console.log("API URL:", API_BASE_URL);
+const API_BASE_URL =
+  window.location.hostname === "localhost"
+    ? "http://localhost:3000"
+    : window.SERVER_URI;
 // Constants
 const REFRESH_INTERVAL = 300000; // 5 minutes
 const CACHE_KEY = "inventory_data";
